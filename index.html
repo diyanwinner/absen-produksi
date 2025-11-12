@@ -139,7 +139,12 @@
 
   // tanggal default = hari ini
   const params = new URLSearchParams(location.search);
-  const todayISO = new Date().toISOString().slice(0,10);
+  const getTodayLocalISO = () => {
+    const d = new Date();
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(Date.now() - tzOffset).toISOString().slice(0,10);
+  };
+  const todayISO = getTodayLocalISO();
   $tgl.value = params.get('today') === '1' ? todayISO : (params.get('date') || todayISO);
 
   $tabs.forEach(b=>b.addEventListener('click', ()=>{
