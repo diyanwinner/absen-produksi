@@ -35,6 +35,15 @@
   input.cell{width:100%;background:#0b1220;border:1px solid #1c2738;color:var(--fg);padding:8px;border-radius:8px;text-align:right}
   .badge{padding:6px 10px;border-radius:999px;background:#0b1220;border:1px solid var(--line);opacity:.85}
   .footer{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-top:1px solid var(--line);background:#0b1220}
+
+  /* toast update */
+  #updateToast{
+    position:fixed; left:50%; transform:translateX(-50%);
+    bottom:18px; display:none; gap:10px; align-items:center;
+    background:#0b1220; border:1px solid #2c3a52; color:#e5e7eb;
+    padding:10px 14px; border-radius:10px; z-index:9999;
+  }
+  #updateToast button{ background:var(--blue); border:1px solid var(--blue); color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -120,8 +129,17 @@
   </div>
 </div>
 
+<!-- toast update -->
+<div id="updateToast">
+  <span>Versi baru tersedia.</span>
+  <button id="btnReload">Perbarui</button>
+</div>
+
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  // ==== versi app untuk cache-busting SW ====
+  window.APP_VERSION = '2025-11-13-01';
 
   const SUPABASE_URL  = 'https://xpcmrdkdnbqdohjjqxds.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwY21yZGtkbmJxZG9oampxeGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5Mzc2ODAsImV4cCI6MjA3ODUxMzY4MH0.ZLEzHKaWjic5vn_zAiD6S2jZgU-s2E-Z8Kbd4M66zE8';
@@ -137,7 +155,7 @@
   let PROC = [];
   let ROWS = [];
 
-  // tanggal default = hari ini
+  // ====== tanggal default = hari ini (zona lokal), bisa override via ?date=YYYY-MM-DD ======
   const params = new URLSearchParams(location.search);
   const getTodayLocalISO = () => {
     const d = new Date();
@@ -358,8 +376,9 @@
     div.textContent = msg; document.body.appendChild(div);
     setTimeout(()=>div.remove(),1600);
   }
-
-  refresh();
 </script>
+
+<!-- Daftarkan Service Worker (auto update) -->
+<script type="module" src="sw-register.js"></script>
 </body>
 </html>
