@@ -120,21 +120,13 @@
   </div>
 </div>
 
-<!-- Supabase SDK -->
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  /* =======================
-     1) KONFIGURASI
-  ======================= */
-  // GANTI dengan kredensial project kamu
   const SUPABASE_URL  = 'https://xpcmrdkdnbqdohjjqxds.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwY21yZGtkbmJxZG9oampxeGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5Mzc2ODAsImV4cCI6MjA3ODUxMzY4MH0.ZLEzHKaWjic5vn_zAiD6S2jZgU-s2E-Z8Kbd4M66zE8';
   const supa = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-  /* =======================
-     2) ELEMEN & STATE
-  ======================= */
   const $tgl   = document.getElementById('tgl');
   const $shift = document.getElementById('shift');
   const $tabs  = document.querySelectorAll('.tab');
@@ -142,10 +134,10 @@
   const $gridBody = document.querySelector('#grid tbody');
 
   let CENTER = 'Injection';
-  let PROC = []; // [{id,name,sort}]
-  let ROWS = []; // [{process_id,name,tetap,kontrak,yayasan,total}]
+  let PROC = [];
+  let ROWS = [];
 
-  // default today
+  // tanggal default = hari ini
   const todayISO = new Date().toISOString().slice(0,10);
   $tgl.value = todayISO;
 
@@ -163,7 +155,6 @@
   document.getElementById('btnExportCSV').onclick   = ()=>downloadCSV(rowsToCSV(ROWS),'shift.csv');
   document.getElementById('btnPrint').onclick       = ()=>window.print();
   document.getElementById('btnRekap').onclick       = renderRekap;
-
   document.getElementById('btnRekapCSV').onclick    = ()=>{
     const csv = rekapToCSV(_lastRekap.rows, _lastRekap.totals);
     downloadCSV(csv,'rekap.csv');
@@ -172,16 +163,11 @@
     downloadJSON(_lastRekap,'rekap.json');
   };
 
-  // hotkeys
   window.addEventListener('keydown', e=>{
     if(e.ctrlKey && e.key.toLowerCase()==='s'){ e.preventDefault(); saveToServer(); }
     if(e.ctrlKey && e.key.toLowerCase()==='e'){ e.preventDefault(); downloadJSON(currentPayload(),'shift.json'); }
-    if(e.ctrlKey && e.key.toLowerCase()==='p'){ /* biarkan print */ }
   });
 
-  /* =======================
-     3) API HELPERS
-  ======================= */
   async function fetchProcesses(center){
     const { data, error } = await supa
       .from('processes')
@@ -239,20 +225,18 @@
     }));
   }
 
-  /* =======================
-     4) UI LOGIC
-  ======================= */
   async function refresh(){
-    // tampilkan key
     $key.textContent = keyTag();
-    // ambil proses untuk center
     PROC = await fetchProcesses(CENTER);
-    // bentuk baris default
-    ROWS = PROC.map(p=>({process_id:p.id,name:p.name,tetap:0,kontrak:0,yayasan:0,total:0}));
-    // isi dari server untuk shift ini
+
+    // default baris: tampil kosong (null), tapi hitungannya dianggap 0
+    ROWS = PROC.map(p=>({process_id:p.id,name:p.name,tetap:null,kontrak:null,yayasan:null,total:0}));
+
+    // ambil dari server
     const serverRows = await fetchAttendance($tgl.value, $shift.value, CENTER);
     const byPid = Object.fromEntries(serverRows.map(r=>[r.process_id, r]));
     ROWS = ROWS.map(r => byPid[r.process_id] ? byPid[r.process_id] : r);
+
     renderGrid();
     hideRekap();
   }
@@ -260,20 +244,21 @@
   function renderGrid(){
     $gridBody.innerHTML = '';
     ROWS.forEach((r,idx)=>{
+      const val = k => (r[k] ? r[k] : ''); // kosongkan jika 0/undefined/null
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="num">${idx+1}</td>
         <td>${escapeHTML(r.name)}</td>
-        <td class="num"><input class="cell" data-i="${idx}" data-k="tetap"   value="${r.tetap}"></td>
-        <td class="num"><input class="cell" data-i="${idx}" data-k="kontrak" value="${r.kontrak}"></td>
-        <td class="num"><input class="cell" data-i="${idx}" data-k="yayasan" value="${r.yayasan}"></td>
-        <td class="num" id="t${idx}">${r.total}</td>`;
+        <td class="num"><input class="cell" data-i="${idx}" data-k="tetap"   value="${val('tetap')}"></td>
+        <td class="num"><input class="cell" data-i="${idx}" data-k="kontrak" value="${val('kontrak')}"></td>
+        <td class="num"><input class="cell" data-i="${idx}" data-k="yayasan" value="${val('yayasan')}"></td>
+        <td class="num" id="t${idx}">${Number(r.tetap||0)+Number(r.kontrak||0)+Number(r.yayasan||0)}</td>`;
       $gridBody.appendChild(tr);
     });
     $gridBody.querySelectorAll('input.cell').forEach(inp=>{
-      inp.addEventListener('input', e=>{
+      inp.addEventListener('input', ()=>{
         const i = Number(inp.dataset.i), k = inp.dataset.k;
-        ROWS[i][k] = Number(inp.value||0);
+        ROWS[i][k] = inp.value === '' ? null : Number(inp.value);
         ROWS[i].total = (Number(ROWS[i].tetap||0)+Number(ROWS[i].kontrak||0)+Number(ROWS[i].yayasan||0));
         document.getElementById('t'+i).textContent = ROWS[i].total;
       });
@@ -322,7 +307,6 @@
   }
   function hideRekap(){ document.getElementById('rekapWrap').style.display='none'; }
 
-  // helpers (download/export)
   function currentPayload(){
     return {
       work_date:$tgl.value, shift:$shift.value, center:CENTER,
@@ -332,7 +316,7 @@
   function rowsToCSV(rows){
     const head = ['No','Proses','Tetap','Kontrak','Yayasan','Total'];
     const lines = [head.join(',')];
-    rows.forEach((r,i)=>lines.push([i+1, csv(r.name), r.tetap, r.kontrak, r.yayasan, r.total].join(',')));
+    rows.forEach((r,i)=>lines.push([i+1, csv(r.name), Number(r.tetap||0), Number(r.kontrak||0), Number(r.yayasan||0), Number(r.total||0)].join(',')));
     return lines.join('\n');
   }
   function rekapToCSV(rows,tot){
@@ -369,7 +353,6 @@
     setTimeout(()=>div.remove(),1600);
   }
 
-  // start
   refresh();
 </script>
 </body>
