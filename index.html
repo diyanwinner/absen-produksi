@@ -138,8 +138,9 @@
   let ROWS = [];
 
   // tanggal default = hari ini
+  const params = new URLSearchParams(location.search);
   const todayISO = new Date().toISOString().slice(0,10);
-  $tgl.value = todayISO;
+  $tgl.value = params.get('today') === '1' ? todayISO : (params.get('date') || todayISO);
 
   $tabs.forEach(b=>b.addEventListener('click', ()=>{
     $tabs.forEach(x=>x.classList.remove('active'));
