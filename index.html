@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aplikasi Input Absen Produksi (Online)</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#111827; --muted:#1f2937; --line:#263244;
+    --fg:#e5e7eb; --fg-dim:#cbd5e1; --blue:#3b82f6; --green:#22c55e; --amber:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+  .bar{background:var(--panel);border:1px solid var(--line);padding:14px;border-radius:12px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .group{display:flex;gap:8px;align-items:center}
+  label{opacity:.85}
+  input[type=date],select{background:#0b1220;border:1px solid var(--line);color:var(--fg);
+    padding:8px 10px;border-radius:8px;outline:none}
+  .tabs{display:flex;gap:6px}
+  .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#0b1220;color:var(--fg);cursor:pointer}
+  .tab.active{background:var(--blue);border-color:var(--blue)}
+  .btn{background:#0b1220;border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:8px;cursor:pointer}
+  .btn:hover{border-color:#3a4a64}
+  .btn.primary{background:var(--blue);border-color:var(--blue)}
+  .btn.success{background:var(--green);border-color:var(--green)}
+  .btn.warn{background:var(--amber);border-color:var(--amber)}
+  .hint{opacity:.7;margin-top:6px}
+  .panel{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left}
+  th{background:#0b1220;text-transform:uppercase;font-size:12px;letter-spacing:.06em}
+  td.num,th.num{text-align:right}
+  tr:hover td{background:#0c1424}
+  input.cell{width:100%;background:#0b1220;border:1px solid #1c2738;color:var(--fg);padding:8px;border-radius:8px;text-align:right}
+  .badge{padding:6px 10px;border-radius:999px;background:#0b1220;border:1px solid var(--line);opacity:.85}
+  .footer{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-top:1px solid var(--line);background:#0b1220}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="group">
+      <label>Tanggal</label>
+      <input type="date" id="tgl">
+    </div>
+    <div class="group">
+      <label>Shift</label>
+      <select id="shift">
+        <option>1</option><option>2</option><option>3</option>
+      </select>
+    </div>
+    <div class="group">
+      <label>Work Center</label>
+      <div class="tabs">
+        <button class="tab active" data-center="Injection">Injection</button>
+        <button class="tab" data-center="Assembly">Assembly</button>
+      </div>
+    </div>
+    <span class="badge" id="keyPreview"></span>
+  </div>
+
+  <div class="hint">Hotkeys: <b>Ctrl+S</b> Simpan ke Server • <b>Ctrl+E</b> Export JSON • <b>Ctrl+P</b> Cetak</div>
+
+  <!-- GRID PER SHIFT -->
+  <div class="panel">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th class="num" style="width:40px">#</th>
+          <th>Work Centre / Proses</th>
+          <th class="num" style="width:140px">Tetap</th>
+          <th class="num" style="width:140px">Kontrak</th>
+          <th class="num" style="width:140px">Yayasan</th>
+          <th class="num" style="width:120px">Total</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="footer">
+      <button class="btn success" id="btnSave">Simpan (Server)</button>
+      <button class="btn" id="btnExportJSON">Export JSON</button>
+      <button class="btn" id="btnExportCSV">Export CSV</button>
+      <button class="btn" id="btnPrint">Cetak / PDF</button>
+      <button class="btn warn" id="btnRekap">Rekap 3 Shift (Tanggal ini)</button>
+    </div>
+  </div>
+
+  <!-- REKAP -->
+  <div class="panel" id="rekapWrap" style="display:none;margin-top:18px">
+    <div style="padding:12px 12px 0 12px;font-weight:600">REKAP TOTAL —
+      <span id="rekapTitle"></span>
+    </div>
+    <table id="rekapTable">
+      <thead>
+        <tr>
+          <th class="num" style="width:40px">#</th>
+          <th>Work Centre / Proses</th>
+          <th class="num">Tetap</th>
+          <th class="num">Kontrak</th>
+          <th class="num">Yayasan</th>
+          <th class="num">Total Masuk</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <th></th><th style="text-align:right">TOTAL</th>
+          <th class="num" id="rTotTetap">0</th>
+          <th class="num" id="rTotKontrak">0</th>
+          <th class="num" id="rTotYayasan">0</th>
+          <th class="num" id="rTotTotal">0</th>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="footer">
+      <button class="btn" id="btnRekapCSV">Export Rekap CSV</button>
+      <button class="btn" id="btnRekapJSON">Export Rekap JSON</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase SDK -->
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+  /* =======================
+     1) KONFIGURASI
+  ======================= */
+  // GANTI dengan kredensial project kamu
+  const SUPABASE_URL  = 'https://xpcmrdkdnbqdohjjqxds.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwY21yZGtkbmJxZG9oampxeGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5Mzc2ODAsImV4cCI6MjA3ODUxMzY4MH0.ZLEzHKaWjic5vn_zAiD6S2jZgU-s2E-Z8Kbd4M66zE8';
+  const supa = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  /* =======================
+     2) ELEMEN & STATE
+  ======================= */
+  const $tgl   = document.getElementById('tgl');
+  const $shift = document.getElementById('shift');
+  const $tabs  = document.querySelectorAll('.tab');
+  const $key   = document.getElementById('keyPreview');
+  const $gridBody = document.querySelector('#grid tbody');
+
+  let CENTER = 'Injection';
+  let PROC = []; // [{id,name,sort}]
+  let ROWS = []; // [{process_id,name,tetap,kontrak,yayasan,total}]
+
+  // default today
+  const todayISO = new Date().toISOString().slice(0,10);
+  $tgl.value = todayISO;
+
+  $tabs.forEach(b=>b.addEventListener('click', ()=>{
+    $tabs.forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    CENTER = b.dataset.center;
+    refresh();
+  }));
+  $tgl.addEventListener('change', refresh);
+  $shift.addEventListener('change', refresh);
+
+  document.getElementById('btnSave').onclick        = saveToServer;
+  document.getElementById('btnExportJSON').onclick  = ()=>downloadJSON(currentPayload(),'shift.json');
+  document.getElementById('btnExportCSV').onclick   = ()=>downloadCSV(rowsToCSV(ROWS),'shift.csv');
+  document.getElementById('btnPrint').onclick       = ()=>window.print();
+  document.getElementById('btnRekap').onclick       = renderRekap;
+
+  document.getElementById('btnRekapCSV').onclick    = ()=>{
+    const csv = rekapToCSV(_lastRekap.rows, _lastRekap.totals);
+    downloadCSV(csv,'rekap.csv');
+  };
+  document.getElementById('btnRekapJSON').onclick   = ()=>{
+    downloadJSON(_lastRekap,'rekap.json');
+  };
+
+  // hotkeys
+  window.addEventListener('keydown', e=>{
+    if(e.ctrlKey && e.key.toLowerCase()==='s'){ e.preventDefault(); saveToServer(); }
+    if(e.ctrlKey && e.key.toLowerCase()==='e'){ e.preventDefault(); downloadJSON(currentPayload(),'shift.json'); }
+    if(e.ctrlKey && e.key.toLowerCase()==='p'){ /* biarkan print */ }
+  });
+
+  /* =======================
+     3) API HELPERS
+  ======================= */
+  async function fetchProcesses(center){
+    const { data, error } = await supa
+      .from('processes')
+      .select('id,name,sort')
+      .eq('center', center)
+      .order('sort', { ascending:true });
+    if(error) throw error;
+    return data;
+  }
+
+  async function fetchAttendance(dateISO, shift, center){
+    const { data, error } = await supa
+      .from('attendance')
+      .select('process_id,tetap,kontrak,yayasan,processes(name,sort)')
+      .eq('work_date', dateISO)
+      .eq('shift', shift)
+      .eq('center', center)
+      .order('processes(sort)');
+    if(error) throw error;
+    return data.map(r=>({
+      process_id: r.process_id,
+      name: r.processes.name,
+      tetap: r.tetap, kontrak: r.kontrak, yayasan: r.yayasan,
+      total: (r.tetap||0)+(r.kontrak||0)+(r.yayasan||0)
+    }));
+  }
+
+  async function upsertAttendance(dateISO, shift, center, rows){
+    const payload = rows.map(r=>({
+      work_date: dateISO,
+      shift: Number(shift),
+      center,
+      process_id: r.process_id,
+      tetap: Number(r.tetap||0),
+      kontrak: Number(r.kontrak||0),
+      yayasan: Number(r.yayasan||0)
+    }));
+    const { error } = await supa
+      .from('attendance')
+      .upsert(payload, { onConflict:'work_date,shift,center,process_id' });
+    if(error) throw error;
+  }
+
+  async function fetchRekap(dateISO, center){
+    const { data, error } = await supa
+      .from('daily_rekap')
+      .select('process_id,process_name,process_sort,tetap,kontrak,yayasan,total')
+      .eq('work_date', dateISO)
+      .eq('center', center)
+      .order('process_sort', { ascending:true });
+    if(error) throw error;
+    return data.map(r=>({
+      process_id:r.process_id, name:r.process_name,
+      tetap:r.tetap, kontrak:r.kontrak, yayasan:r.yayasan, total:r.total
+    }));
+  }
+
+  /* =======================
+     4) UI LOGIC
+  ======================= */
+  async function refresh(){
+    // tampilkan key
+    $key.textContent = keyTag();
+    // ambil proses untuk center
+    PROC = await fetchProcesses(CENTER);
+    // bentuk baris default
+    ROWS = PROC.map(p=>({process_id:p.id,name:p.name,tetap:0,kontrak:0,yayasan:0,total:0}));
+    // isi dari server untuk shift ini
+    const serverRows = await fetchAttendance($tgl.value, $shift.value, CENTER);
+    const byPid = Object.fromEntries(serverRows.map(r=>[r.process_id, r]));
+    ROWS = ROWS.map(r => byPid[r.process_id] ? byPid[r.process_id] : r);
+    renderGrid();
+    hideRekap();
+  }
+
+  function renderGrid(){
+    $gridBody.innerHTML = '';
+    ROWS.forEach((r,idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="num">${idx+1}</td>
+        <td>${escapeHTML(r.name)}</td>
+        <td class="num"><input class="cell" data-i="${idx}" data-k="tetap"   value="${r.tetap}"></td>
+        <td class="num"><input class="cell" data-i="${idx}" data-k="kontrak" value="${r.kontrak}"></td>
+        <td class="num"><input class="cell" data-i="${idx}" data-k="yayasan" value="${r.yayasan}"></td>
+        <td class="num" id="t${idx}">${r.total}</td>`;
+      $gridBody.appendChild(tr);
+    });
+    $gridBody.querySelectorAll('input.cell').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const i = Number(inp.dataset.i), k = inp.dataset.k;
+        ROWS[i][k] = Number(inp.value||0);
+        ROWS[i].total = (Number(ROWS[i].tetap||0)+Number(ROWS[i].kontrak||0)+Number(ROWS[i].yayasan||0));
+        document.getElementById('t'+i).textContent = ROWS[i].total;
+      });
+    });
+  }
+
+  async function saveToServer(){
+    try{
+      await upsertAttendance($tgl.value, $shift.value, CENTER, ROWS);
+      toast('Tersimpan ke server ✅');
+    }catch(e){
+      console.error(e);
+      alert('Gagal menyimpan ke server');
+    }
+  }
+
+  let _lastRekap = null;
+  async function renderRekap(){
+    const rows = await fetchRekap($tgl.value, CENTER);
+    const tbody = document.querySelector('#rekapTable tbody');
+    const title = `${$tgl.value}, Work Center: ${CENTER} (gabungan shift 1+2+3)`;
+    document.getElementById('rekapTitle').textContent = title;
+    tbody.innerHTML = '';
+    let totTet=0, totKon=0, totYay=0, totAll=0;
+    rows.forEach((r,i)=>{
+      totTet += r.tetap; totKon += r.kontrak; totYay += r.yayasan; totAll += r.total;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="num">${i+1}</td>
+        <td>${escapeHTML(r.name)}</td>
+        <td class="num">${r.tetap}</td>
+        <td class="num">${r.kontrak}</td>
+        <td class="num">${r.yayasan}</td>
+        <td class="num">${r.total}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('rTotTetap').textContent   = totTet;
+    document.getElementById('rTotKontrak').textContent = totKon;
+    document.getElementById('rTotYayasan').textContent = totYay;
+    document.getElementById('rTotTotal').textContent   = totAll;
+
+    _lastRekap = { title, rows, totals:{tetap:totTet, kontrak:totKon, yayasan:totYay, total:totAll} };
+
+    document.getElementById('rekapWrap').style.display='block';
+    window.scrollTo({ top:document.getElementById('rekapWrap').offsetTop-16, behavior:'smooth' });
+  }
+  function hideRekap(){ document.getElementById('rekapWrap').style.display='none'; }
+
+  // helpers (download/export)
+  function currentPayload(){
+    return {
+      work_date:$tgl.value, shift:$shift.value, center:CENTER,
+      rows: ROWS.map(({process_id,name,tetap,kontrak,yayasan,total})=>({process_id,name,tetap,kontrak,yayasan,total}))
+    };
+  }
+  function rowsToCSV(rows){
+    const head = ['No','Proses','Tetap','Kontrak','Yayasan','Total'];
+    const lines = [head.join(',')];
+    rows.forEach((r,i)=>lines.push([i+1, csv(r.name), r.tetap, r.kontrak, r.yayasan, r.total].join(',')));
+    return lines.join('\n');
+  }
+  function rekapToCSV(rows,tot){
+    const head = ['No','Proses','Tetap','Kontrak','Yayasan','Total'];
+    const lines = [head.join(',')];
+    rows.forEach((r,i)=>lines.push([i+1, csv(r.name), r.tetap, r.kontrak, r.yayasan, r.total].join(',')));
+    lines.push([ '', 'TOTAL', tot.tetap, tot.kontrak, tot.yayasan, tot.total ].join(','));
+    return lines.join('\n');
+  }
+  function downloadCSV(csv, name){
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'),{href:url,download:name});
+    a.click(); URL.revokeObjectURL(url);
+  }
+  function downloadJSON(obj,name){
+    const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'),{href:url,download:name});
+    a.click(); URL.revokeObjectURL(url);
+  }
+  function keyTag(){ return `${$tgl.value} | Shift ${$shift.value} | ${CENTER}`; }
+  const escmap = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;','/':'&#47;'};
+  const escapeHTML = s => String(s).replace(/[&<>"'/]/g,m=>escmap[m]);
+  const csv = s => `"${String(s).replace(/"/g,'""')}"`;
+  function toast(msg){
+    const div = document.createElement('div');
+    Object.assign(div.style,{
+      position:'fixed',bottom:'20px',left:'50%',transform:'translateX(-50%)',
+      background:'#0b1220',border:'1px solid #2c3a52',padding:'10px 14px',
+      borderRadius:'8px',color:'#e5e7eb',zIndex:9999
+    });
+    div.textContent = msg; document.body.appendChild(div);
+    setTimeout(()=>div.remove(),1600);
+  }
+
+  // start
+  refresh();
+</script>
+</body>
+</html>
