@@ -76,17 +76,18 @@
   <!-- GRID PER SHIFT -->
   <div class="panel">
     <table id="grid">
-      <thead>
-        <tr>
-          <th class="num" style="width:40px">#</th>
-          <th>Work Centre / Proses</th>
-          <th class="num" style="width:140px">Tetap</th>
-          <th class="num" style="width:140px">Kontrak</th>
-          <th class="num" style="width:140px">Yayasan</th>
-          <th class="num" style="width:120px">Total</th>
-        </tr>
-      </thead>
+      <thead>...</thead>
       <tbody></tbody>
+      <tfoot>
+        <tr>
+          <th></th>
+          <th style="text-align:right">TOTAL</th>
+          <th class="num" id="totTetap">0</th>
+          <th class="num" id="totKontrak">0</th>
+          <th class="num" id="totYayasan">0</th>
+          <th class="num" id="totAll">0</th>
+        </tr>
+      </tfoot>
     </table>
     <div class="footer">
       <button class="btn success" id="btnSave">Simpan (Server)</button>
@@ -267,29 +268,58 @@
     hideRekap();
   }
 
-  function renderGrid(){
+  function renderGrid() {
     $gridBody.innerHTML = '';
-    ROWS.forEach((r,idx)=>{
-      const val = k => (r[k] ? r[k] : ''); // kosongkan jika 0/undefined/null
+
+    ROWS.forEach((r, idx) => {
+      // kalau null/0/undefined ditampilkan kosong
+      const val = k => (r[k] ? r[k] : '');
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="num">${idx+1}</td>
+        <td class="num">${idx + 1}</td>
         <td>${escapeHTML(r.name)}</td>
-        <td class="num"><input class="cell" data-i="${idx}" data-k="tetap"   value="${val('tetap')}"></td>
-        <td class="num"><input class="cell" data-i="${idx}" data-k="kontrak" value="${val('kontrak')}"></td>
-        <td class="num"><input class="cell" data-i="${idx}" data-k="yayasan" value="${val('yayasan')}"></td>
-        <td class="num" id="t${idx}">${Number(r.tetap||0)+Number(r.kontrak||0)+Number(r.yayasan||0)}</td>`;
+        <td class="num">
+          <input class="cell" data-i="${idx}" data-k="tetap"   value="${val('tetap')}">
+        </td>
+        <td class="num">
+          <input class="cell" data-i="${idx}" data-k="kontrak" value="${val('kontrak')}">
+        </td>
+        <td class="num">
+          <input class="cell" data-i="${idx}" data-k="yayasan" value="${val('yayasan')}">
+        </td>
+        <td class="num" id="t${idx}">
+          ${Number(r.tetap || 0) + Number(r.kontrak || 0) + Number(r.yayasan || 0)}
+        </td>
+      `;
       $gridBody.appendChild(tr);
     });
-    $gridBody.querySelectorAll('input.cell').forEach(inp=>{
-      inp.addEventListener('input', ()=>{
-        const i = Number(inp.dataset.i), k = inp.dataset.k;
+
+    // listener input
+    $gridBody.querySelectorAll('input.cell').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const i = Number(inp.dataset.i);
+        const k = inp.dataset.k;
+
+        // kalau kosong -> simpan null
         ROWS[i][k] = inp.value === '' ? null : Number(inp.value);
-        ROWS[i].total = (Number(ROWS[i].tetap||0)+Number(ROWS[i].kontrak||0)+Number(ROWS[i].yayasan||0));
-        document.getElementById('t'+i).textContent = ROWS[i].total;
-      });
-    });
-  }
+
+        // hitung total per baris
+        ROWS[i].total =
+          Number(ROWS[i].tetap   || 0) +
+          Number(ROWS[i].kontrak || 0) +
+          Number(ROWS[i].yayasan || 0);
+
+       document.getElementById('t' + i).textContent = ROWS[i].total;
+
+       // 🔴 setiap ada perubahan, update total bawah
+       updateTotals();
+     });
+   });
+
+   // 🔴 pertama kali render juga hitung total
+   updateTotals();
+ }
 
   async function saveToServer(){
     try{
@@ -299,6 +329,22 @@
       console.error(e);
       alert('Gagal menyimpan ke server');
     }
+  }
+
+  function updateTotals() {
+    let tTetap = 0, tKon = 0, tYay = 0, tAll = 0;
+
+    ROWS.forEach(r => {
+      tTetap += Number(r.tetap || 0);
+      tKon   += Number(r.kontrak || 0);
+      tYay   += Number(r.yayasan || 0);
+      tAll   += Number(r.total || 0);
+    });
+
+    document.getElementById('totTetap').textContent = tTetap;
+    document.getElementById('totKontrak').textContent = tKon;
+    document.getElementById('totYayasan').textContent = tYay;
+    document.getElementById('totAll').textContent = tAll;
   }
 
   let _lastRekap = null;
