@@ -1,52 +1,93 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8" />
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0f172a">
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Aplikasi Input Absen Produksi (Online)</title>
-<style>
-  :root{
-    --bg:#0f172a; --panel:#111827; --muted:#1f2937; --line:#263244;
-    --fg:#e5e7eb; --fg-dim:#cbd5e1; --blue:#3b82f6; --green:#22c55e; --amber:#f59e0b;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 system-ui,Segoe UI,Roboto,Arial}
-  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-  .bar{background:var(--panel);border:1px solid var(--line);padding:14px;border-radius:12px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-  .group{display:flex;gap:8px;align-items:center}
-  label{opacity:.85}
-  input[type=date],select{background:#0b1220;border:1px solid var(--line);color:var(--fg);
-    padding:8px 10px;border-radius:8px;outline:none}
-  .tabs{display:flex;gap:6px}
-  .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#0b1220;color:var(--fg);cursor:pointer}
-  .tab.active{background:var(--blue);border-color:var(--blue)}
-  .btn{background:#0b1220;border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:8px;cursor:pointer}
-  .btn:hover{border-color:#3a4a64}
-  .btn.primary{background:var(--blue);border-color:var(--blue)}
-  .btn.success{background:var(--green);border-color:var(--green)}
-  .btn.warn{background:var(--amber);border-color:var(--amber)}
-  .hint{opacity:.7;margin-top:6px}
-  .panel{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  table{width:100%;border-collapse:collapse}
-  th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left}
-  th{background:#0b1220;text-transform:uppercase;font-size:12px;letter-spacing:.06em}
-  td.num,th.num{text-align:right}
-  tr:hover td{background:#0c1424}
-  input.cell{width:100%;background:#0b1220;border:1px solid #1c2738;color:var(--fg);padding:8px;border-radius:8px;text-align:right}
-  .badge{padding:6px 10px;border-radius:999px;background:#0b1220;border:1px solid var(--line);opacity:.85}
-  .footer{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-top:1px solid var(--line);background:#0b1220}
+  <meta charset="utf-8" />
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aplikasi Input Absen Produksi (Online)</title>
+  <style>
+    :root{
+      --bg:#0f172a; --panel:#111827; --muted:#1f2937; --line:#263244;
+      --fg:#e5e7eb; --fg-dim:#cbd5e1; --blue:#3b82f6; --green:#22c55e; --amber:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 system-ui,Segoe UI,Roboto,Arial}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    .bar{background:var(--panel);border:1px solid var(--line);padding:14px;border-radius:12px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+    .group{display:flex;gap:8px;align-items:center}
+    label{opacity:.85}
+    input[type=date],select{
+      background:#0b1220;border:1px solid var(--line);color:var(--fg);
+      padding:8px 10px;border-radius:8px;outline:none
+    }
+    .tabs{display:flex;gap:6px}
+    .tab{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#0b1220;color:var(--fg);cursor:pointer}
+    .tab.active{background:var(--blue);border-color:var(--blue)}
+    .btn{background:#0b1220;border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:8px;cursor:pointer}
+    .btn:hover{border-color:#3a4a64}
+    .btn.primary{background:var(--blue);border-color:var(--blue)}
+    .btn.success{background:var(--green);border-color:var(--green)}
+    .btn.warn{background:var(--amber);border-color:var(--amber)}
+    .hint{opacity:.7;margin-top:6px}
+    .panel{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left}
+    th{background:#0b1220;text-transform:uppercase;font-size:12px;letter-spacing:.06em}
+    td.num,th.num{text-align:right}
+    tr:hover td{background:#0c1424}
+    input.cell{
+      width:100%;
+      max-width:110px;     /* kotak angka lebih ramping */
+      background:#0b1220;
+      border:1px solid #1c2738;
+      color:var(--fg);
+      padding:8px;
+      border-radius:8px;
+      text-align:right;
+    }
+    .badge{padding:6px 10px;border-radius:999px;background:#0b1220;border:1px solid var(--line);opacity:.85}
+    .footer{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-top:1px solid var(--line);background:#0b1220}
 
-  /* toast update */
-  #updateToast{
-    position:fixed; left:50%; transform:translateX(-50%);
-    bottom:18px; display:none; gap:10px; align-items:center;
-    background:#0b1220; border:1px solid #2c3a52; color:#e5e7eb;
-    padding:10px 14px; border-radius:10px; z-index:9999;
-  }
-  #updateToast button{ background:var(--blue); border:1px solid var(--blue); color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
-</style>
+    /* toast update */
+    #updateToast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:18px; display:none; gap:10px; align-items:center;
+      background:#0b1220; border:1px solid #2c3a52; color:#e5e7eb;
+      padding:10px 14px; border-radius:10px; z-index:9999;
+    }
+    #updateToast button{
+      background:var(--blue); border:1px solid var(--blue); color:#fff;
+      padding:6px 10px; border-radius:8px; cursor:pointer;
+    }
+
+    /* status shift di rekap */
+    .shift-status{
+      margin-left:auto;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-size:13px;
+      color:var(--fg-dim);
+    }
+    .shift-pill{
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#0b1220;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .shift-pill.ok{
+      border-color:var(--green);
+      color:var(--green);
+    }
+    .shift-pill.missing{
+      border-color:#f97373;
+      color:#f97373;
+    }
+  </style>
 </head>
 <body>
 <div class="wrap">
@@ -76,7 +117,16 @@
   <!-- GRID PER SHIFT -->
   <div class="panel">
     <table id="grid">
-      <thead>...</thead>
+      <thead>
+        <tr>
+          <th class="num" style="width:40px">#</th>
+          <th>WORK CENTRE / PROSES</th>
+          <th class="num" style="width:140px">TETAP</th>
+          <th class="num" style="width:140px">KONTRAK</th>
+          <th class="num" style="width:140px">YAYASAN</th>
+          <th class="num" style="width:120px">TOTAL</th>
+        </tr>
+      </thead>
       <tbody></tbody>
       <tfoot>
         <tr class="totals-row">
@@ -128,6 +178,7 @@
     <div class="footer">
       <button class="btn" id="btnRekapCSV">Export Rekap CSV</button>
       <button class="btn" id="btnRekapJSON">Export Rekap JSON</button>
+      <div id="shiftStatus" class="shift-status"></div>
     </div>
   </div>
 </div>
@@ -272,7 +323,6 @@
     $gridBody.innerHTML = '';
 
     ROWS.forEach((r, idx) => {
-      // kalau null/0/undefined ditampilkan kosong
       const val = k => (r[k] ? r[k] : '');
 
       const tr = document.createElement('tr');
@@ -295,31 +345,26 @@
       $gridBody.appendChild(tr);
     });
 
-    // listener input
     $gridBody.querySelectorAll('input.cell').forEach(inp => {
       inp.addEventListener('input', () => {
         const i = Number(inp.dataset.i);
         const k = inp.dataset.k;
 
-        // kalau kosong -> simpan null
         ROWS[i][k] = inp.value === '' ? null : Number(inp.value);
 
-        // hitung total per baris
         ROWS[i].total =
           Number(ROWS[i].tetap   || 0) +
           Number(ROWS[i].kontrak || 0) +
           Number(ROWS[i].yayasan || 0);
 
-       document.getElementById('t' + i).textContent = ROWS[i].total;
+        document.getElementById('t' + i).textContent = ROWS[i].total;
 
-       // 🔴 setiap ada perubahan, update total bawah
-       updateTotals();
-     });
-   });
+        updateTotals();
+      });
+    });
 
-   // 🔴 pertama kali render juga hitung total
-   updateTotals();
- }
+    updateTotals();
+  }
 
   async function saveToServer(){
     try{
@@ -347,11 +392,61 @@
     document.getElementById('totAll').textContent = tAll;
   }
 
+  // ====== CEK STATUS SHIFT UNTUK REKAP ======
+  async function checkShiftsFilled(dateISO, center){
+    const { data, error } = await supa
+      .from('attendance')
+      .select('shift')
+      .eq('work_date', dateISO)
+      .eq('center', center);
+
+    if(error){
+      console.error(error);
+      return null;
+    }
+
+    const found = new Set(data.map(r => Number(r.shift)));
+    return {
+      1: found.has(1),
+      2: found.has(2),
+      3: found.has(3),
+    };
+  }
+
+  function updateShiftStatus(status){
+    const box = document.getElementById('shiftStatus');
+    if(!status){
+      box.textContent = 'Gagal membaca status shift';
+      return;
+    }
+
+    const allOk = status[1] && status[2] && status[3];
+
+    const pill = (shift, ok) => `
+      <div class="shift-pill ${ok ? 'ok' : 'missing'}">
+        <span>${ok ? '✅' : '❌'}</span>
+        <span>Shift ${shift}</span>
+      </div>
+    `;
+
+    box.innerHTML = `
+      ${pill(1, status[1])}
+      ${pill(2, status[2])}
+      ${pill(3, status[3])}
+      <span style="margin-left:8px;">
+        ${allOk ? 'Semua shift sudah diisi' : 'Ada shift yang belum diinput'}
+      </span>
+    `;
+  }
+
   let _lastRekap = null;
   async function renderRekap(){
-    const rows = await fetchRekap($tgl.value, CENTER);
+    const date = $tgl.value;
+    const center = CENTER;
+
+    const rows = await fetchRekap(date, center);
     const tbody = document.querySelector('#rekapTable tbody');
-    const title = `${$tgl.value}, Work Center: ${CENTER} (gabungan shift 1+2+3)`;
+    const title = `${date}, Work Center: ${center} (gabungan shift 1+2+3)`;
     document.getElementById('rekapTitle').textContent = title;
     tbody.innerHTML = '';
     let totTet=0, totKon=0, totYay=0, totAll=0;
@@ -373,6 +468,10 @@
     document.getElementById('rTotTotal').textContent   = totAll;
 
     _lastRekap = { title, rows, totals:{tetap:totTet, kontrak:totKon, yayasan:totYay, total:totAll} };
+
+    // cek status shift 1–3
+    const status = await checkShiftsFilled(date, center);
+    updateShiftStatus(status);
 
     document.getElementById('rekapWrap').style.display='block';
     window.scrollTo({ top:document.getElementById('rekapWrap').offsetTop-16, behavior:'smooth' });
@@ -424,6 +523,9 @@
     div.textContent = msg; document.body.appendChild(div);
     setTimeout(()=>div.remove(),1600);
   }
+
+  // pertama kali load
+  refresh();
 </script>
 
 <!-- Daftarkan Service Worker (auto update) -->
