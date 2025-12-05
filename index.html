@@ -23,10 +23,8 @@
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; font-size:14px; line-height:1.5; }
     
-    /* Layout Utama */
     .wrap { max-width:1200px; margin:0 auto; padding:20px; }
     
-    /* Header Bar */
     .header-card {
       background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
       padding:20px; margin-bottom:20px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);
@@ -44,7 +42,6 @@
     }
     input:focus, select:focus { border-color:var(--primary); }
 
-    /* Tabs Work Center */
     .tabs { background:#020617; padding:4px; border-radius:10px; border:1px solid var(--border); display:flex; }
     .tab {
       flex:1; border:none; background:transparent; color:var(--text-dim);
@@ -52,13 +49,11 @@
     }
     .tab.active { background:var(--panel); color:var(--primary); box-shadow:0 2px 4px rgba(0,0,0,0.2); font-weight:700; }
 
-    /* Badge Info */
     .info-bar { margin-top:16px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:16px; flex-wrap:wrap; gap:10px; }
     .badge { background:rgba(59,130,246,0.15); color:#60a5fa; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:600; border:1px solid rgba(59,130,246,0.3); }
     .shortcuts { font-size:12px; color:var(--text-dim); display:flex; gap:12px; }
     .shortcuts b { color:var(--text); background:#334155; padding:2px 6px; border-radius:4px; }
 
-    /* Grid Table Container */
     .grid-card {
       background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
       overflow:hidden; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);
@@ -76,7 +71,6 @@
     tr:last-child td { border-bottom:none; }
     tr:hover td { background:rgba(255,255,255,0.02); }
 
-    /* Input Cells */
     input.cell {
       background:#0f172a; border:1px solid var(--border); text-align:center;
       font-weight:600; color:var(--text); width:100%; max-width:80px;
@@ -86,12 +80,10 @@
     .process-name { font-weight:500; color:var(--text); }
     .total-cell { font-weight:700; color:var(--primary); text-align:center; }
 
-    /* Footer Totals */
     tfoot tr { background:#0f172a; font-weight:700; }
     tfoot td { color:var(--success); text-align:center; padding:16px; font-size:15px; }
     tfoot td:first-child { text-align:right; color:var(--text-dim); }
 
-    /* Action Bar */
     .actions {
       padding:16px; background:#0f172a; border-top:1px solid var(--border);
       display:flex; gap:10px; flex-wrap:wrap; align-items:center;
@@ -112,7 +104,6 @@
     .btn.success { background:var(--success); border-color:var(--success); color:#022c22; }
     .btn.warn { background:var(--warn); border-color:var(--warn); color:#451a03; }
 
-    /* Rekap Section */
     #rekapWrap { margin-top:30px; border-color:var(--warn); }
     .rekap-header {
       background:rgba(245,158,11,0.1); color:var(--warn); padding:12px 16px;
@@ -120,7 +111,6 @@
       border-bottom:1px solid var(--border);
     }
 
-    /* Shift Pills */
     .shift-status { display:flex; gap:8px; }
     .pill {
       font-size:11px; padding:2px 8px; border-radius:10px; border:1px solid var(--border);
@@ -129,7 +119,6 @@
     .pill.filled { opacity:1; border-color:var(--success); color:var(--success); }
     .pill.empty { opacity:1; border-color:var(--danger); color:var(--danger); }
 
-    /* Toast */
     #updateToast {
       position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
       background:var(--panel); border:1px solid var(--primary); padding:12px 20px;
@@ -271,6 +260,7 @@
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
+  // versi untuk SW / cache busting
   window.APP_VERSION = '2025-11-14-ModernUI';
 
   const SUPABASE_URL  = 'https://xpcmrdkdnbqdohjjqxds.supabase.co';
@@ -320,43 +310,92 @@
   });
 
   async function fetchProcesses(center){
-    const { data, error } = await supa.from('processes').select('id,name,sort').eq('center', center).order('sort', { ascending:true });
-    if(error) throw error; return data;
+    const { data, error } = await supa
+      .from('processes')
+      .select('id,name,sort')
+      .eq('center', center)
+      .order('sort', { ascending:true });
+    if(error) throw error;
+    return data;
   }
 
   async function fetchAttendance(dateISO, shift, center){
-    const { data, error } = await supa.from('attendance').select('process_id,tetap,kontrak,yayasan,processes(name,sort)').eq('work_date', dateISO).eq('shift', shift).eq('center', center).order('processes(sort)');
+    const { data, error } = await supa
+      .from('attendance')
+      .select('process_id,tetap,kontrak,yayasan,processes(name,sort)')
+      .eq('work_date', dateISO)
+      .eq('shift', shift)
+      .eq('center', center)
+      .order('processes(sort)');
     if(error) throw error;
     return data.map(r=>({
-      process_id: r.process_id, name: r.processes.name, tetap: r.tetap, kontrak: r.kontrak, yayasan: r.yayasan,
+      process_id: r.process_id,
+      name: r.processes.name,
+      tetap: r.tetap,
+      kontrak: r.kontrak,
+      yayasan: r.yayasan,
       total: (r.tetap||0)+(r.kontrak||0)+(r.yayasan||0)
     }));
   }
 
   async function upsertAttendance(dateISO, shift, center, rows){
     const payload = rows.map(r=>({
-      work_date: dateISO, shift: Number(shift), center, process_id: r.process_id,
-      tetap: Number(r.tetap||0), kontrak: Number(r.kontrak||0), yayasan: Number(r.yayasan||0)
+      work_date: dateISO,
+      shift: Number(shift),
+      center,
+      process_id: r.process_id,
+      tetap: Number(r.tetap||0),
+      kontrak: Number(r.kontrak||0),
+      yayasan: Number(r.yayasan||0)
     }));
-    const { error } = await supa.from('attendance').upsert(payload, { onConflict:'work_date,shift,center,process_id' });
+    const { error } = await supa
+      .from('attendance')
+      .upsert(payload, { onConflict:'work_date,shift,center,process_id' });
     if(error) throw error;
   }
 
   async function fetchRekap(dateISO, center){
-    const { data, error } = await supa.from('daily_rekap').select('*').eq('work_date', dateISO).eq('center', center).order('process_sort', { ascending:true });
+    const { data, error } = await supa
+      .from('daily_rekap')
+      .select('process_id,process_name,process_sort,tetap,kontrak,yayasan,total')
+      .eq('work_date', dateISO)
+      .eq('center', center)
+      .order('process_sort', { ascending:true });
     if(error) throw error;
-    return data.map(r=>({ process_id:r.process_id, name:r.process_name, tetap:r.tetap, kontrak:r.kontrak, yayasan:r.yayasan, total:r.total }));
+    return data.map(r=>({
+      process_id:r.process_id,
+      name:r.process_name,
+      tetap:r.tetap,
+      kontrak:r.kontrak,
+      yayasan:r.yayasan,
+      total:r.total
+    }));
   }
 
   async function refresh(){
-    $key.textContent = `${$tgl.value} • Shift ${$shift.value} • ${CENTER}`;
-    PROC = await fetchProcesses(CENTER);
-    ROWS = PROC.map(p=>({process_id:p.id,name:p.name,tetap:null,kontrak:null,yayasan:null,total:0}));
-    const serverRows = await fetchAttendance($tgl.value, $shift.value, CENTER);
-    const byPid = Object.fromEntries(serverRows.map(r=>[r.process_id, r]));
-    ROWS = ROWS.map(r => byPid[r.process_id] ? byPid[r.process_id] : r);
-    renderGrid();
-    document.getElementById('rekapWrap').style.display='none';
+    try{
+      $key.textContent = `${$tgl.value} • Shift ${$shift.value} • ${CENTER}`;
+      PROC = await fetchProcesses(CENTER);
+
+      ROWS = PROC.map(p=>({
+        process_id:p.id,
+        name:p.name,
+        tetap:null,
+        kontrak:null,
+        yayasan:null,
+        total:0
+      }));
+
+      const serverRows = await fetchAttendance($tgl.value, $shift.value, CENTER);
+      const byPid = Object.fromEntries(serverRows.map(r=>[r.process_id, r]));
+      ROWS = ROWS.map(r => byPid[r.process_id] ? byPid[r.process_id] : r);
+
+      renderGrid();
+      document.getElementById('rekapWrap').style.display='none';
+    }catch(err){
+      console.error(err);
+      toast('Gagal load data dari server');
+    }
   }
 
   function renderGrid() {
@@ -367,10 +406,12 @@
       tr.innerHTML = `
         <td style="text-align:center; color:var(--text-dim);">${idx + 1}</td>
         <td class="process-name">${escapeHTML(r.name)}</td>
-        <td style="text-align:center;"><input type="number" class="cell" data-i="${idx}" data-k="tetap" value="${val('tetap')}" placeholder="-"></td>
+        <td style="text-align:center;"><input type="number" class="cell" data-i="${idx}" data-k="tetap"   value="${val('tetap')}"   placeholder="-"></td>
         <td style="text-align:center;"><input type="number" class="cell" data-i="${idx}" data-k="kontrak" value="${val('kontrak')}" placeholder="-"></td>
         <td style="text-align:center;"><input type="number" class="cell" data-i="${idx}" data-k="yayasan" value="${val('yayasan')}" placeholder="-"></td>
-        <td class="total-cell" id="t${idx}">${Number(r.tetap||0)+Number(r.kontrak||0)+Number(r.yayasan||0)}</td>
+        <td class="total-cell" id="t${idx}">
+          ${Number(r.tetap||0)+Number(r.kontrak||0)+Number(r.yayasan||0)}
+        </td>
       `;
       $gridBody.appendChild(tr);
     });
@@ -380,7 +421,10 @@
         const i = Number(inp.dataset.i);
         const k = inp.dataset.k;
         ROWS[i][k] = inp.value === '' ? null : Number(inp.value);
-        ROWS[i].total = Number(ROWS[i].tetap||0) + Number(ROWS[i].kontrak||0) + Number(ROWS[i].yayasan||0);
+        ROWS[i].total =
+          Number(ROWS[i].tetap||0) +
+          Number(ROWS[i].kontrak||0) +
+          Number(ROWS[i].yayasan||0);
         document.getElementById('t' + i).textContent = ROWS[i].total;
         updateTotals();
       });
@@ -406,17 +450,23 @@
   function updateTotals() {
     let tTetap=0, tKon=0, tYay=0, tAll=0;
     ROWS.forEach(r => {
-      tTetap += Number(r.tetap||0); tKon += Number(r.kontrak||0);
-      tYay += Number(r.yayasan||0); tAll += Number(r.total||0);
+      tTetap += Number(r.tetap||0);
+      tKon   += Number(r.kontrak||0);
+      tYay   += Number(r.yayasan||0);
+      tAll   += Number(r.total||0);
     });
-    document.getElementById('totTetap').textContent = tTetap;
+    document.getElementById('totTetap').textContent   = tTetap;
     document.getElementById('totKontrak').textContent = tKon;
     document.getElementById('totYayasan').textContent = tYay;
-    document.getElementById('totAll').textContent = tAll;
+    document.getElementById('totAll').textContent     = tAll;
   }
 
   async function checkShiftsFilled(dateISO, center){
-    const { data, error } = await supa.from('attendance').select('shift').eq('work_date', dateISO).eq('center', center);
+    const { data, error } = await supa
+      .from('attendance')
+      .select('shift')
+      .eq('work_date', dateISO)
+      .eq('center', center);
     if(error) return null;
     const found = new Set(data.map(r => Number(r.shift)));
     return { 1: found.has(1), 2: found.has(2), 3: found.has(3) };
@@ -426,65 +476,104 @@
   async function renderRekap(){
     const date = $tgl.value;
     const center = CENTER;
-    const rows = await fetchRekap(date, center);
-    const tbody = document.querySelector('#rekapTable tbody');
-    document.getElementById('rekapTitle').textContent = `Data: ${date} • ${center}`;
-    
-    tbody.innerHTML = '';
-    let totTet=0, totKon=0, totYay=0, totAll=0;
-    rows.forEach((r,i)=>{
-      totTet+=r.tetap; totKon+=r.kontrak; totYay+=r.yayasan; totAll+=r.total;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="text-align:center;">${i+1}</td>
-        <td>${escapeHTML(r.name)}</td>
-        <td style="text-align:center;">${r.tetap}</td>
-        <td style="text-align:center;">${r.kontrak}</td>
-        <td style="text-align:center;">${r.yayasan}</td>
-        <td style="text-align:center; font-weight:700;">${r.total}</td>`;
-      tbody.appendChild(tr);
-    });
-    
-    document.getElementById('rTotTetap').textContent = totTet;
-    document.getElementById('rTotKontrak').textContent = totKon;
-    document.getElementById('rTotYayasan').textContent = totYay;
-    document.getElementById('rTotTotal').textContent = totAll;
+    try{
+      const rows = await fetchRekap(date, center);
+      const tbody = document.querySelector('#rekapTable tbody');
+      document.getElementById('rekapTitle').textContent = `Data: ${date} • ${center}`;
+      
+      tbody.innerHTML = '';
+      let totTet=0, totKon=0, totYay=0, totAll=0;
+      rows.forEach((r,i)=>{
+        totTet+=r.tetap; totKon+=r.kontrak; totYay+=r.yayasan; totAll+=r.total;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="text-align:center;">${i+1}</td>
+          <td>${escapeHTML(r.name)}</td>
+          <td style="text-align:center;">${r.tetap}</td>
+          <td style="text-align:center;">${r.kontrak}</td>
+          <td style="text-align:center;">${r.yayasan}</td>
+          <td style="text-align:center; font-weight:700;">${r.total}</td>`;
+        tbody.appendChild(tr);
+      });
+      
+      document.getElementById('rTotTetap').textContent   = totTet;
+      document.getElementById('rTotKontrak').textContent = totKon;
+      document.getElementById('rTotYayasan').textContent = totYay;
+      document.getElementById('rTotTotal').textContent   = totAll;
 
-    _lastRekap = { rows, totals:{tetap:totTet, kontrak:totKon, yayasan:totYay, total:totAll} };
+      _lastRekap = {
+        rows,
+        totals:{tetap:totTet, kontrak:totKon, yayasan:totYay, total:totAll}
+      };
 
-    const status = await checkShiftsFilled(date, center);
-    const statusBox = document.getElementById('shiftStatus');
-    statusBox.innerHTML = '';
-    [1,2,3].forEach(s => {
-      const isFilled = status && status[s];
-      statusBox.innerHTML += `<span class="pill ${isFilled?'filled':'empty'}">Shift ${s} ${isFilled?'✓':''}</span>`;
-    });
+      const status = await checkShiftsFilled(date, center);
+      const statusBox = document.getElementById('shiftStatus');
+      statusBox.innerHTML = '';
+      [1,2,3].forEach(s => {
+        const isFilled = status && status[s];
+        statusBox.innerHTML += `<span class="pill ${isFilled?'filled':'empty'}">Shift ${s} ${isFilled?'✓':''}</span>`;
+      });
 
-    document.getElementById('rekapWrap').style.display='block';
-    document.getElementById('rekapWrap').scrollIntoView({behavior:'smooth'});
+      document.getElementById('rekapWrap').style.display='block';
+      document.getElementById('rekapWrap').scrollIntoView({behavior:'smooth'});
+    }catch(err){
+      console.error(err);
+      toast('Gagal load rekap harian');
+    }
   }
 
   function currentPayload(){
-    return { work_date:$tgl.value, shift:$shift.value, center:CENTER, rows: ROWS.map(({process_id,name,tetap,kontrak,yayasan,total})=>({process_id,name,tetap,kontrak,yayasan,total})) };
+    return {
+      work_date:$tgl.value,
+      shift:$shift.value,
+      center:CENTER,
+      rows: ROWS.map(({process_id,name,tetap,kontrak,yayasan,total})=>({
+        process_id,name,tetap,kontrak,yayasan,total
+      }))
+    };
   }
+
   function rowsToCSV(rows){
     const lines = [['No','Proses','Tetap','Kontrak','Yayasan','Total'].join(',')];
-    rows.forEach((r,i)=>lines.push([i+1, csv(r.name), Number(r.tetap||0), Number(r.kontrak||0), Number(r.yayasan||0), Number(r.total||0)].join(',')));
+    rows.forEach((r,i)=>lines.push([
+      i+1,
+      csv(r.name),
+      Number(r.tetap||0),
+      Number(r.kontrak||0),
+      Number(r.yayasan||0),
+      Number(r.total||0)
+    ].join(',')));
     return lines.join('\n');
   }
+
   function rekapToCSV(rows,tot){
     const lines = [['No','Proses','Tetap','Kontrak','Yayasan','Total'].join(',')];
-    rows.forEach((r,i)=>lines.push([i+1, csv(r.name), r.tetap, r.kontrak, r.yayasan, r.total].join(',')));
-    lines.push([ '', 'TOTAL', tot.tetap, tot.kontrak, tot.yayasan, tot.total ].join(','));
+    rows.forEach((r,i)=>lines.push([
+      i+1,
+      csv(r.name),
+      r.tetap,
+      r.kontrak,
+      r.yayasan,
+      r.total
+    ].join(',')));
+    lines.push(['', 'TOTAL', tot.tetap, tot.kontrak, tot.yayasan, tot.total].join(','));
     return lines.join('\n');
   }
-  function downloadCSV(csv, name){
-    const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv], {type:'text/csv'})),download:name});
+
+  function downloadCSV(csvText, name){
+    const blob = new Blob([csvText], {type:'text/csv'});
+    const url  = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'),{href:url,download:name});
     a.click();
+    URL.revokeObjectURL(url);
   }
+
   function downloadJSON(obj,name){
-    const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)], {type:'application/json'})),download:name});
+    const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'),{href:url,download:name});
     a.click();
+    URL.revokeObjectURL(url);
   }
   
   const escmap = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;','/':'&#47;'};
@@ -493,8 +582,21 @@
   
   function toast(msg){
     const div = document.createElement('div');
-    Object.assign(div.style,{ position:'fixed',bottom:'30px',left:'50%',transform:'translateX(-50%)', background:'#10b981', padding:'10px 20px', borderRadius:'30px', color:'#064e3b', fontWeight:'600', zIndex:9999, boxShadow:'0 5px 15px rgba(0,0,0,0.3)' });
-    div.textContent = msg; document.body.appendChild(div);
+    Object.assign(div.style,{
+      position:'fixed',
+      bottom:'30px',
+      left:'50%',
+      transform:'translateX(-50%)',
+      background:'#10b981',
+      padding:'10px 20px',
+      borderRadius:'30px',
+      color:'#064e3b',
+      fontWeight:'600',
+      zIndex:9999,
+      boxShadow:'0 5px 15px rgba(0,0,0,0.3)'
+    });
+    div.textContent = msg;
+    document.body.appendChild(div);
     setTimeout(()=>div.remove(),2000);
   }
 
