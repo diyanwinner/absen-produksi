@@ -1,5 +1,6 @@
 /* Service Worker: network-first + auto reload */
-const VERSION   = (self.APP_VERSION || '2025-11-13-01');
+// GANTI VERSION DI BAWAH INI AGAR CACHE INDEX.HTML LAMA TERGANTI
+const VERSION   = '2025-12-05-FIX01';
 const CACHE_KEY = `absen-prod-cache::${VERSION}`;
 
 const CORE_ASSETS = [
