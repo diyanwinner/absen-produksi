@@ -13,18 +13,22 @@
 
   <style>
     :root {
-      /* === TEMA ISLAMI (EMERALD & GOLD) === */
-      --bg-body: #022c22;
-      --bg-card: #064e3b;
-      --bg-input: #065f46;
-      --text-main: #ecfdf5;
-      --text-muted: #a7f3d0;
-      --gold: #d4af37;
+      /* === PALET WARNA ISLAMI (Emerald & Gold) === */
+      --bg-body: #022c22;       /* Hijau Gelap Sekali */
+      --bg-card: #064e3b;       /* Hijau Emerald */
+      --bg-input: #065f46;      /* Hijau Input */
+      
+      --text-main: #ecfdf5;     /* Putih Kehijauan */
+      --text-muted: #a7f3d0;    /* Hijau Muda Pucat */
+      
+      --gold: #d4af37;          /* EMAS (Primary) */
       --gold-hover: #b4942b;
-      --success: #10b981;
-      --warn: #fbbf24;
-      --danger: #ef4444;
-      --border: #d4af37;
+      
+      --success: #10b981;       
+      --warn: #fbbf24;       
+      --danger: #ef4444;        
+      
+      --border: #d4af37;        /* Border Emas */
       --radius: 12px;
       --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     }
@@ -32,87 +36,142 @@
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     
     body { 
-      margin: 0; background-color: var(--bg-body);
+      margin: 0; 
+      background-color: var(--bg-body);
+      /* Pattern Halus */
       background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.15) 1px, transparent 0);
       background-size: 30px 30px;
-      color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; line-height: 1.5; 
+      color: var(--text-main); 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      font-size: 14px; 
+      line-height: 1.5; 
     }
     
+    /* Layout Utama */
     .wrap { max-width:1200px; margin:0 auto; padding:20px; }
 
-    /* HEADER */
+    /* Header Bismillah */
     .bismillah {
-      font-family: 'Amiri', serif; font-size: 2.2rem; color: var(--gold);
-      text-align: center; margin-bottom: 0.2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    }
-    .slogan {
-      text-align: center; font-size: 0.9rem; color: var(--text-muted);
-      font-style: italic; margin-bottom: 2rem;
+      font-family: 'Amiri', serif;
+      font-size: 2.2rem;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 0.2rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
     
+    .slogan {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-bottom: 2rem;
+    }
+    
+    /* Header Card */
     .header-card {
-      background: var(--bg-card); border: 1px solid var(--gold); border-radius: var(--radius);
-      padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow);
+      background: var(--bg-card); 
+      border: 1px solid var(--gold); 
+      border-radius: var(--radius);
+      padding: 20px; margin-bottom: 20px; 
+      box-shadow: var(--shadow);
+      position: relative;
     }
     
     .controls { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:16px; align-items:end; }
+    
     .form-group { display:flex; flex-direction:column; gap:6px; }
     .form-group label { font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
     
     input, select {
-      background: var(--bg-input); border: 1px solid #374151; color: var(--text-main);
-      padding: 10px 12px; border-radius: 8px; font-size: 14px; width: 100%; outline: none; transition: border-color 0.2s;
+      background: var(--bg-input); 
+      border: 1px solid #374151; 
+      color: var(--text-main);
+      padding: 10px 12px; border-radius: 8px; font-size: 14px; width: 100%; outline: none;
+      transition: border-color 0.2s;
     }
     input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2); }
 
-    /* TABS */
-    .tabs { background: var(--bg-input); padding: 4px; border-radius: 10px; border: 1px solid #374151; display: flex; }
+    /* Tabs Work Center */
+    .tabs { 
+      background: var(--bg-input); 
+      padding: 4px; border-radius: 10px; 
+      border: 1px solid #374151; 
+      display: flex; 
+    }
     .tab {
       flex: 1; border: none; background: transparent; color: var(--text-muted);
       padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
     }
-    .tab.active { background: var(--gold); color: #022c22; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-weight: 800; }
+    .tab.active { 
+      background: var(--gold); 
+      color: #022c22; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+      font-weight: 800; 
+    }
 
-    /* INFO BAR */
-    .info-bar { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(212, 175, 55, 0.3); padding-top: 16px; flex-wrap: wrap; gap: 10px; }
-    .badge { background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid var(--success); }
+    /* Badge Info */
+    .info-bar { 
+      margin-top: 16px; display: flex; justify-content: space-between; align-items: center; 
+      border-top: 1px solid rgba(212, 175, 55, 0.3); padding-top: 16px; flex-wrap: wrap; gap: 10px; 
+    }
+    .badge { 
+      background: rgba(16, 185, 129, 0.2); color: var(--success); 
+      padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; 
+      border: 1px solid var(--success); 
+    }
     .shortcuts { font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; }
     .shortcuts b { color: var(--gold); background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; }
 
-    /* GRID TABLE */
+    /* Grid Table Container */
     .grid-card {
-      background: var(--bg-card); border: 1px solid var(--gold); border-radius: var(--radius);
-      overflow: hidden; box-shadow: var(--shadow);
+      background: var(--bg-card); 
+      border: 1px solid var(--gold); 
+      border-radius: var(--radius);
+      overflow: hidden; 
+      box-shadow: var(--shadow);
     }
+    
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; min-width: 600px; }
     
     th {
-      background: #022c22; color: var(--gold); font-weight: 700; font-size: 12px;
-      text-transform: uppercase; text-align: left; padding: 14px 16px; border-bottom: 2px solid var(--gold);
+      background: #022c22; color: var(--gold); 
+      font-weight: 700; font-size: 12px;
+      text-transform: uppercase; text-align: left; padding: 14px 16px;
+      border-bottom: 2px solid var(--gold);
     }
     td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(212, 175, 55, 0.05); }
 
+    /* Input Cells */
     input.cell {
-      background: rgba(0,0,0,0.2); border: 1px solid transparent; text-align: center;
+      background: rgba(0,0,0,0.2); 
+      border: 1px solid transparent; 
+      text-align: center;
       font-weight: 700; color: var(--gold); width: 100%; max-width: 80px;
     }
-    input.cell:focus { border-color: var(--gold); background: var(--bg-input); color: var(--text-main); }
+    input.cell:focus { 
+      border-color: var(--gold); 
+      background: var(--bg-input); 
+      color: var(--text-main);
+    }
     
     .process-name { font-weight: 600; color: var(--text-main); }
     .total-cell { font-weight: 800; color: var(--success); text-align: center; font-size: 1.1em; }
 
+    /* Footer Totals */
     tfoot tr { background: #022c22; font-weight: 700; }
     tfoot td { color: var(--gold); text-align: center; padding: 16px; font-size: 15px; border-top: 2px solid var(--gold); }
     tfoot td:first-child { text-align: right; color: var(--text-muted); }
 
-    /* ACTIONS */
+    /* Action Bar */
     .actions {
       padding: 16px; background: #022c22; border-top: 1px solid var(--gold);
       display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
     }
+    
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       background: var(--bg-input); border: 1px solid var(--gold); color: var(--text-main);
@@ -120,38 +179,39 @@
       transition: all 0.2s; font-size: 13px;
     }
     .btn:hover { background: var(--gold); color: #022c22; transform: translateY(-1px); }
-    .btn.primary { background: linear-gradient(to bottom, #d4af37, #b4942b); border: none; color: #022c22; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3); }
+    .btn:active { transform: translateY(0); }
+    
+    .btn.primary { 
+      background: linear-gradient(to bottom, #d4af37, #b4942b); 
+      border: none; color: #022c22; 
+      box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+    }
+    .btn.primary:hover { filter: brightness(1.1); }
+    
     .btn.success { border-color: var(--success); color: var(--success); background: transparent; }
     .btn.success:hover { background: var(--success); color: #022c22; }
+    
     .btn.warn { border-color: var(--warn); color: var(--warn); background: transparent; }
     .btn.warn:hover { background: var(--warn); color: #451a03; }
 
-    /* REKAP & FILTERS */
+    /* Rekap Section */
     #rekapWrap { margin-top: 30px; border-color: var(--warn); box-shadow: 0 0 20px rgba(251, 191, 36, 0.1); }
-    
     .rekap-header {
-      background: #022c22; padding: 16px;
+      background: rgba(251, 191, 36, 0.1); color: var(--warn); padding: 12px 16px;
+      font-weight: 700; display: flex; justify-content: space-between; align-items: center;
       border-bottom: 1px solid var(--warn);
     }
-    
-    .rekap-title-row {
-        display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
-    }
-    .rekap-title-row h3 { margin: 0; color: var(--warn); font-size: 1.1rem; }
-    .machine-count { font-size: 0.9rem; color: var(--text-muted); font-weight: normal; }
-    .machine-count b { color: var(--text-main); font-size: 1.1rem; }
 
-    /* FILTER BUTTONS */
-    .filter-bar { display: flex; gap: 8px; }
-    .filter-btn {
-        flex: 1; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: var(--text-muted);
-        padding: 8px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
-        transition: 0.2s;
+    /* Shift Pills */
+    .shift-status { display: flex; gap: 8px; }
+    .pill {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--text-muted);
+      background: transparent; opacity: 0.7; color: var(--text-muted);
     }
-    .filter-btn:hover { background: rgba(212, 175, 55, 0.1); color: var(--gold); }
-    .filter-btn.active { background: var(--gold); color: #022c22; border-color: var(--gold); font-weight: 800; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+    .pill.filled { opacity: 1; border-color: var(--success); color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); }
+    .pill.empty { opacity: 1; border-color: var(--danger); color: var(--danger); }
 
-    /* TOAST */
+    /* Toast */
     #updateToast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
       background: var(--bg-card); border: 1px solid var(--gold); padding: 12px 20px;
@@ -166,7 +226,7 @@
       .header-card { padding: 16px; border-radius: 12px; border: 1px solid var(--gold); }
       .shortcuts { display: none; }
       th, td { padding: 10px; font-size: 13px; }
-      .rekap-title-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+      input.cell { max-width: 60px; padding: 8px 4px; }
     }
   </style>
 </head>
@@ -237,6 +297,7 @@
 
     <div class="actions">
       <button class="btn success" id="btnSave">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
         Simpan Data
       </button>
       <div style="flex:1"></div>
@@ -248,17 +309,8 @@
 
   <div class="grid-card" id="rekapWrap" style="display:none;">
     <div class="rekap-header">
-      <div class="rekap-title-row">
-          <h3>REKAPITULASI HARIAN</h3>
-          <span class="machine-count" id="machineCount">Total Mesin Aktif: <b>0 Unit</b></span>
-      </div>
-      
-      <div class="filter-bar">
-          <button class="filter-btn active" onclick="filterRekap('all', this)">SEMUA SHIFT</button>
-          <button class="filter-btn" onclick="filterRekap(1, this)">SHIFT 1</button>
-          <button class="filter-btn" onclick="filterRekap(2, this)">SHIFT 2</button>
-          <button class="filter-btn" onclick="filterRekap(3, this)">SHIFT 3</button>
-      </div>
+      <span>REKAPITULASI HARIAN (Shift 1 + 2 + 3)</span>
+      <div id="shiftStatus" class="shift-status"></div>
     </div>
     
     <div class="table-wrap">
@@ -270,14 +322,14 @@
             <th style="text-align:center;">Tetap</th>
             <th style="text-align:center;">Kontrak</th>
             <th style="text-align:center;">Yayasan</th>
-            <th style="text-align:center;">Total</th>
+            <th style="text-align:center;">Grand Total</th>
           </tr>
         </thead>
         <tbody></tbody>
         <tfoot>
           <tr>
             <td></td>
-            <td style="text-align:right;">TOTAL (FILTERED)</td>
+            <td style="text-align:right;">TOTAL HARIAN</td>
             <td id="rTotTetap">0</td>
             <td id="rTotKontrak">0</td>
             <td id="rTotYayasan">0</td>
@@ -319,9 +371,6 @@
   let CENTER = 'Injection';
   let PROC = [];
   let ROWS = [];
-  
-  // GLOBAL STORAGE UNTUK REKAP FILTER
-  let _allDailyData = []; 
 
   const params = new URLSearchParams(location.search);
   const getTodayLocalISO = () => {
@@ -344,13 +393,12 @@
   document.getElementById('btnSave').onclick        = saveToServer;
   document.getElementById('btnExportJSON').onclick  = ()=>downloadJSON(currentPayload(),'shift.json');
   document.getElementById('btnExportCSV').onclick   = ()=>downloadCSV(rowsToCSV(ROWS),'shift.csv');
-  document.getElementById('btnRekap').onclick       = fetchAndShowRekap;
+  document.getElementById('btnRekap').onclick       = renderRekap;
   document.getElementById('btnRekapCSV').onclick    = ()=>{
-    const csv = rekapToCSV(_lastRekapRendered.rows, _lastRekapRendered.totals);
-    downloadCSV(csv,'rekap_filtered.csv');
+    const csv = rekapToCSV(_lastRekap.rows, _lastRekap.totals);
+    downloadCSV(csv,'rekap.csv');
   };
 
-  // HOTKEYS
   window.addEventListener('keydown', e=>{
     if(e.ctrlKey && e.key.toLowerCase()==='s'){ e.preventDefault(); saveToServer(); }
     if(e.ctrlKey && e.key.toLowerCase()==='e'){ e.preventDefault(); downloadJSON(currentPayload(),'shift.json'); }
@@ -385,6 +433,12 @@
     }));
     const { error } = await supa.from('attendance').upsert(payload, { onConflict:'work_date,shift,center,process_id' });
     if(error) throw error;
+  }
+
+  async function fetchRekap(dateISO, center){
+    const { data, error } = await supa.from('daily_rekap').select('*').eq('work_date', dateISO).eq('center', center).order('process_sort', { ascending:true });
+    if(error) throw error;
+    return data.map(r=>({ process_id:r.process_id, name:r.process_name, tetap:r.tetap, kontrak:r.kontrak, yayasan:r.yayasan, total:r.total }));
   }
 
   async function refresh(){
@@ -460,122 +514,53 @@
     document.getElementById('totAll').textContent = tAll;
   }
 
-  // --- REKAPITULASI LOGIC BARU (FILTERABLE) ---
-  
-  async function fetchAndShowRekap() {
-      const date = $tgl.value;
-      const center = CENTER;
-      
-      // Ambil data mentah (SEMUA SHIFT) dari attendance table langsung
-      // Biar bisa difilter di sisi client (browser)
-      const { data, error } = await supa
-          .from('attendance')
-          .select('shift, tetap, kontrak, yayasan, processes(name, sort)')
-          .eq('work_date', date)
-          .eq('center', center)
-          .order('processes(sort)', {ascending: true});
-          
-      if(error) return alert("Gagal ambil data rekap: " + error.message);
-      
-      // Simpan di global var buat filtering
-      _allDailyData = data || [];
-      
-      // Reset Tombol Filter jadi 'ALL'
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      document.querySelector('.filter-btn').classList.add('active'); // Tombol pertama (ALL)
-      
-      // Render Default (Semua)
-      renderRekapTable('all');
-      
-      document.getElementById('rekapTitle').textContent = `Data: ${date} • ${center}`;
-      document.getElementById('rekapWrap').style.display='block';
-      document.getElementById('rekapWrap').scrollIntoView({behavior:'smooth'});
+  async function checkShiftsFilled(dateISO, center){
+    const { data, error } = await supa.from('attendance').select('shift').eq('work_date', dateISO).eq('center', center);
+    if(error) return null;
+    const found = new Set(data.map(r => Number(r.shift)));
+    return { 1: found.has(1), 2: found.has(2), 3: found.has(3) };
   }
 
-  // Fungsi Global agar bisa dipanggil onclick
-  window.filterRekap = function(mode, btn) {
-      // Highlight tombol
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      renderRekapTable(mode);
-  }
+  let _lastRekap = null;
+  async function renderRekap(){
+    const date = $tgl.value;
+    const center = CENTER;
+    const rows = await fetchRekap(date, center);
+    const tbody = document.querySelector('#rekapTable tbody');
+    document.getElementById('rekapTitle').textContent = `Data: ${date} • ${center}`;
+    
+    tbody.innerHTML = '';
+    let totTet=0, totKon=0, totYay=0, totAll=0;
+    rows.forEach((r,i)=>{
+      totTet+=r.tetap; totKon+=r.kontrak; totYay+=r.yayasan; totAll+=r.total;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="text-align:center;">${i+1}</td>
+        <td>${escapeHTML(r.name)}</td>
+        <td style="text-align:center;">${r.tetap}</td>
+        <td style="text-align:center;">${r.kontrak}</td>
+        <td style="text-align:center;">${r.yayasan}</td>
+        <td style="text-align:center; font-weight:700;">${r.total}</td>`;
+      tbody.appendChild(tr);
+    });
+    
+    document.getElementById('rTotTetap').textContent = totTet;
+    document.getElementById('rTotKontrak').textContent = totKon;
+    document.getElementById('rTotYayasan').textContent = totYay;
+    document.getElementById('rTotTotal').textContent = totAll;
 
-  let _lastRekapRendered = null;
+    _lastRekap = { rows, totals:{tetap:totTet, kontrak:totKon, yayasan:totYay, total:totAll} };
 
-  function renderRekapTable(mode) {
-      // 1. FILTERING DATA
-      let filteredData = [];
-      if(mode === 'all') {
-          filteredData = _allDailyData;
-      } else {
-          filteredData = _allDailyData.filter(r => r.shift == mode);
-      }
-      
-      // 2. GROUPING & SUMMING (By Process Name)
-      // Karena data raw, satu proses bisa muncul 3 kali (shift 1,2,3). Harus digabung.
-      let grouped = {};
-      
-      filteredData.forEach(r => {
-          const pName = r.processes?.name || 'Unknown';
-          if(!grouped[pName]) {
-              grouped[pName] = { name: pName, tetap:0, kontrak:0, yayasan:0, total:0, count:0 };
-          }
-          const t = (r.tetap||0);
-          const k = (r.kontrak||0);
-          const y = (r.yayasan||0);
-          
-          grouped[pName].tetap += t;
-          grouped[pName].kontrak += k;
-          grouped[pName].yayasan += y;
-          grouped[pName].total += (t + k + y);
-          grouped[pName].count += 1; // Menandakan mesin ini aktif di shift tsb
-      });
-      
-      // Convert to Array & Sort (Sebenernya udah urut dari DB, tapi amanin aja)
-      // Kita pakai urutan kemunculan pertama dari _allDailyData biar sort-nya bener
-      // (Simplified: Kita percaya urutan DB aja, Object.values biasanya ngacak tapi ok lah)
-      let rows = Object.values(grouped);
-      
-      // 3. RENDER TABLE
-      const tbody = document.querySelector('#rekapTable tbody');
-      tbody.innerHTML = '';
-      
-      let gtTet=0, gtKon=0, gtYay=0, gtAll=0;
-      let activeMachines = 0;
-      
-      rows.forEach((r, i) => {
-          // Hitung Grand Total Bawah
-          gtTet += r.tetap;
-          gtKon += r.kontrak;
-          gtYay += r.yayasan;
-          gtAll += r.total;
-          
-          // Hitung Mesin Aktif (Kalau ada isinya > 0, dianggap aktif)
-          if(r.total > 0) activeMachines++;
-          
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="text-align:center;">${i+1}</td>
-            <td>${escapeHTML(r.name)}</td>
-            <td style="text-align:center;">${r.tetap}</td>
-            <td style="text-align:center;">${r.kontrak}</td>
-            <td style="text-align:center;">${r.yayasan}</td>
-            <td style="text-align:center; font-weight:700;">${r.total}</td>`;
-          tbody.appendChild(tr);
-      });
-      
-      // Update Footer
-      document.getElementById('rTotTetap').textContent = gtTet;
-      document.getElementById('rTotKontrak').textContent = gtKon;
-      document.getElementById('rTotYayasan').textContent = gtYay;
-      document.getElementById('rTotTotal').textContent = gtAll;
-      
-      // Update Total Mesin di Header
-      document.querySelector('#machineCount b').innerText = activeMachines + " Unit";
-      
-      // Simpan buat export CSV
-      _lastRekapRendered = { rows, totals: { tetap:gtTet, kontrak:gtKon, yayasan:gtYay, total:gtAll } };
+    const status = await checkShiftsFilled(date, center);
+    const statusBox = document.getElementById('shiftStatus');
+    statusBox.innerHTML = '';
+    [1,2,3].forEach(s => {
+      const isFilled = status && status[s];
+      statusBox.innerHTML += `<span class="pill ${isFilled?'filled':'empty'}">Shift ${s} ${isFilled?'✓':''}</span>`;
+    });
+
+    document.getElementById('rekapWrap').style.display='block';
+    document.getElementById('rekapWrap').scrollIntoView({behavior:'smooth'});
   }
 
   function currentPayload(){
