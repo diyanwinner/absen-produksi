@@ -609,14 +609,13 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL BARU (Sesuai Screenshot) ---
+  // --- FUNGSI EXPORT EXCEL BARU (DENGAN GABUNG OPERATOR BAHAN) ---
   async function exportToExcelStyled() {
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
     btn.innerHTML = 'Sedang Generate...';
 
     try {
-      // 1. Tentukan Range Tanggal (6 Hari dari tanggal yang dipilih)
       const startDate = new Date($tgl.value);
       const dates = [];
       const headerDates = [];
@@ -629,7 +628,6 @@
         headerDates.push(d.getDate().toString()); 
       }
 
-      // 2. Ambil Data (Rekap Harian) untuk 6 tanggal tersebut
       const { data: rawData, error } = await supa
         .from('daily_rekap')
         .select('*')
@@ -639,28 +637,59 @@
         
       if(error) throw error;
 
-      // 3. Mapping Data
       const dataMap = {};
       rawData.forEach(r => {
         if(!dataMap[r.process_name]) dataMap[r.process_name] = {};
         dataMap[r.process_name][r.work_date] = r;
       });
 
-      // 4. Struktur Excel
+      // === LOGIC GABUNG: Operator Bahan -> Injection ===
+      // Pastikan nama ini sesuai persis dengan yg di database
+      const targetVariants = ['Injection', 'Inject']; // Jaga-jaga namanya Injection atau Inject
+      const sourceName = 'Operator Bahan';
+      
+      // Cari nama target yang valid di list proses
+      let realTarget = targetVariants.find(t => PROC.find(p => p.name === t));
+      
+      // Jika target (Injection) ditemukan, gabungkan datanya
+      if(realTarget) {
+        dates.forEach(d => {
+           // Init object target jika belum ada
+           if(!dataMap[realTarget]) dataMap[realTarget] = {};
+           if(!dataMap[realTarget][d]) dataMap[realTarget][d] = {tetap:0, kontrak:0, yayasan:0};
+
+           // Ambil data source (Operator Bahan)
+           const src = dataMap[sourceName] && dataMap[sourceName][d];
+           
+           if(src) {
+             const tgt = dataMap[realTarget][d];
+             // Tambahkan
+             tgt.tetap   = (Number(tgt.tetap)||0)   + (Number(src.tetap)||0);
+             tgt.kontrak = (Number(tgt.kontrak)||0) + (Number(src.kontrak)||0);
+             tgt.yayasan = (Number(tgt.yayasan)||0) + (Number(src.yayasan)||0);
+           }
+        });
+      }
+
+      // Filter: Buat list proses baru untuk Excel, HILANGKAN 'Operator Bahan'
+      // supaya tidak muncul double (karena nilainya sudah masuk ke Injection)
+      const excelProcs = PROC.filter(p => p.name !== sourceName);
+
+      // Mulai buat Excel dari excelProcs (bukan PROC biasa)
       const wsData = [
         ["", "", "Tanggal", "", "", "", "", ""] 
       ];
       const rowDates = ["Proses", "Status", ...headerDates];
       wsData.push(rowDates);
 
-      // 5. Looping Data
       const merges = [
-        { s: {r:0, c:2}, e: {r:0, c:7} } // Merge Header "Tanggal"
+        { s: {r:0, c:2}, e: {r:0, c:7} } 
       ]; 
       
       let currentRow = 2;
 
-      PROC.forEach(proc => {
+      // Loop pakai excelProcs yg sudah difilter
+      excelProcs.forEach(proc => {
         const pName = proc.name;
         const pData = dataMap[pName] || {};
 
@@ -668,7 +697,6 @@
           const row = [];
           if(idx === 0) {
             row.push(pName);
-            // Merge nama proses (3 baris)
             merges.push({ s: {r: currentRow, c: 0}, e: {r: currentRow + 2, c: 0} });
           } else {
             row.push(""); 
@@ -686,13 +714,11 @@
         });
       });
 
-      // 6. Buat Workbook
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(wsData);
 
       ws['!merges'] = merges;
 
-      // 7. Styling
       const range = XLSX.utils.decode_range(ws['!ref']);
       const styleHeader = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { bold: true, sz: 11 }, alignment: { horizontal: "center", vertical: "center" }, border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} } };
       const styleProcess = { font: { bold: true }, alignment: { vertical: "center", horizontal: "left" }, border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} } };
