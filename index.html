@@ -609,7 +609,7 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL FINAL (FIXED MERGE + SPACING) ---
+  // --- FUNGSI EXPORT EXCEL FINAL (FIX STAMPING UP DOWN + SPACING + MERGE) ---
   async function exportToExcelStyled() {
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
@@ -628,7 +628,6 @@
         headerDates.push(d.getDate().toString()); 
       }
 
-      // Tarik DATA GLOBAL (Semua departemen)
       const { data: rawData, error } = await supa
         .from('daily_rekap')
         .select('*')
@@ -637,29 +636,36 @@
         
       if(error) throw error;
 
-      // Mapping data
+      // Mapping data (DENGAN PRIORITAS CENTER LOCAL)
       const dataMap = {};
       rawData.forEach(r => {
         if(!dataMap[r.process_name]) dataMap[r.process_name] = {};
-        dataMap[r.process_name][r.work_date] = r;
+        
+        const isLocal = r.center === CENTER; // Cek apakah ini data dari dept kita?
+        const existing = dataMap[r.process_name][r.work_date];
+
+        // LOGIC ANTI-BENTROK:
+        // 1. Kalau belum ada data di tanggal ini -> Masukkan.
+        // 2. Kalau sudah ada data, TAPI data baru ini adalah LOCAL (punya kita) -> Timpa.
+        //    (Ini mencegah data 'Stamping Up Down' lokal ketimpa data kosong dari dept lain)
+        if (!existing || (isLocal && existing.center !== CENTER)) {
+             dataMap[r.process_name][r.work_date] = r;
+        }
       });
 
       // === CONFIG MERGE ===
       const mergers = [
         { src: "Operator Bahan", dest: "Injection" },
         { src: "Operator Bahan", dest: "Inject" },
-        // REVISI: Pastikan nama sumber (src) dan tujuan (dest) sesuai database
         { src: "Stamping Logo",  dest: "Logo" } 
       ];
 
       const norm = s => String(s).trim().toLowerCase().replace(/\s+/g,'');
 
       mergers.forEach(m => {
-        // Cari key asli di dataMap (case insensitive & ignore spaces)
         const srcKey  = Object.keys(dataMap).find(k => norm(k) === norm(m.src));
         const destKey = Object.keys(dataMap).find(k => norm(k) === norm(m.dest));
 
-        // Jika sumber & tujuan ada datanya, kita gabung
         if (srcKey && destKey) {
            dates.forEach(d => {
               if(!dataMap[destKey][d]) dataMap[destKey][d] = {tetap:0, kontrak:0, yayasan:0};
@@ -691,9 +697,9 @@
         const pName = proc.name;
         const pData = dataMap[pName] || {};
 
-        // === FITUR BARU: Tambah baris kosong jika bukan proses pertama ===
+        // === Tambah baris kosong/jeda (Spacer) ===
         if (procIndex > 0) {
-           wsData.push([""]); // Baris spacer
+           wsData.push([""]); 
            currentRow++;
         }
 
@@ -710,7 +716,6 @@
           dates.forEach(dateISO => {
             const dayData = pData[dateISO];
             const val = dayData ? dayData[type] : 0;
-            // Tulis 0 jika kosong
             row.push(val === null || val === undefined ? 0 : Number(val));
           });
 
