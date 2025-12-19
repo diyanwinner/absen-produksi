@@ -609,7 +609,7 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL REVISI (Cross-Department Merge) ---
+  // --- FUNGSI EXPORT EXCEL FINAL (FIXED MERGE + SPACING) ---
   async function exportToExcelStyled() {
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
@@ -628,12 +628,10 @@
         headerDates.push(d.getDate().toString()); 
       }
 
-      // REVISI: Tarik data SEMUA center, bukan cuma center yg aktif
-      // Supaya 'Stamping Logo' dari Assembly bisa kebaca saat buka Injection
+      // Tarik DATA GLOBAL (Semua departemen)
       const { data: rawData, error } = await supa
         .from('daily_rekap')
         .select('*')
-        // HAPUS filter .eq('center', CENTER) agar dapat data global
         .in('work_date', dates)
         .order('process_sort');
         
@@ -646,17 +644,18 @@
         dataMap[r.process_name][r.work_date] = r;
       });
 
-      // === CONFIG MERGE DATA (Gabung antar departemen) ===
+      // === CONFIG MERGE ===
       const mergers = [
-        { src: "Operator Bahan", dest: "Injection" }, // Operator Bahan -> Injection
-        { src: "Operator Bahan", dest: "Inject" },    // Jaga-jaga nama alias
-        { src: "Stamping Logo",  dest: "Logo" }       // REVISI: Stamping Logo -> Logo
+        { src: "Operator Bahan", dest: "Injection" },
+        { src: "Operator Bahan", dest: "Inject" },
+        // REVISI: Pastikan nama sumber (src) dan tujuan (dest) sesuai database
+        { src: "Stamping Logo",  dest: "Logo" } 
       ];
 
-      const norm = s => String(s).trim().toLowerCase();
+      const norm = s => String(s).trim().toLowerCase().replace(/\s+/g,'');
 
       mergers.forEach(m => {
-        // Cari key asli di dataMap (case insensitive)
+        // Cari key asli di dataMap (case insensitive & ignore spaces)
         const srcKey  = Object.keys(dataMap).find(k => norm(k) === norm(m.src));
         const destKey = Object.keys(dataMap).find(k => norm(k) === norm(m.dest));
 
@@ -677,8 +676,6 @@
       });
 
       // Filter List Proses untuk Excel
-      // Kita tetap pakai list PROC (yang sesuai tab aktif),
-      // TAPI kita buang proses yang sudah di-merge (sumbernya) agar tidak double
       const blacklist = mergers.map(m => norm(m.src));
       const excelProcs = PROC.filter(p => !blacklist.includes(norm(p.name)));
 
@@ -690,9 +687,15 @@
       const merges = [ { s: {r:0, c:2}, e: {r:0, c:7} } ]; 
       let currentRow = 2;
 
-      excelProcs.forEach(proc => {
+      excelProcs.forEach((proc, procIndex) => {
         const pName = proc.name;
         const pData = dataMap[pName] || {};
+
+        // === FITUR BARU: Tambah baris kosong jika bukan proses pertama ===
+        if (procIndex > 0) {
+           wsData.push([""]); // Baris spacer
+           currentRow++;
+        }
 
         ['tetap', 'kontrak', 'yayasan'].forEach((type, idx) => {
           const row = [];
