@@ -609,7 +609,7 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL BARU (DENGAN GABUNG OPERATOR BAHAN) ---
+  // --- FUNGSI EXPORT EXCEL BARU (DENGAN PERBAIKAN MERGE & ANGKA 0) ---
   async function exportToExcelStyled() {
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
@@ -637,6 +637,7 @@
         
       if(error) throw error;
 
+      // Mapping data berdasarkan Nama Proses dan Tanggal
       const dataMap = {};
       rawData.forEach(r => {
         if(!dataMap[r.process_name]) dataMap[r.process_name] = {};
@@ -644,38 +645,42 @@
       });
 
       // === LOGIC GABUNG: Operator Bahan -> Injection ===
-      // Pastikan nama ini sesuai persis dengan yg di database
-      const targetVariants = ['Injection', 'Inject']; // Jaga-jaga namanya Injection atau Inject
-      const sourceName = 'Operator Bahan';
-      
-      // Cari nama target yang valid di list proses
-      let realTarget = targetVariants.find(t => PROC.find(p => p.name === t));
-      
-      // Jika target (Injection) ditemukan, gabungkan datanya
-      if(realTarget) {
-        dates.forEach(d => {
-           // Init object target jika belum ada
-           if(!dataMap[realTarget]) dataMap[realTarget] = {};
-           if(!dataMap[realTarget][d]) dataMap[realTarget][d] = {tetap:0, kontrak:0, yayasan:0};
+      // Pastikan nama ini sesuai persis dengan screenshot/database
+      const sourceKey = "Operator Bahan"; 
+      const targetKey = "Injection";
 
-           // Ambil data source (Operator Bahan)
-           const src = dataMap[sourceName] && dataMap[sourceName][d];
-           
-           if(src) {
-             const tgt = dataMap[realTarget][d];
-             // Tambahkan
-             tgt.tetap   = (Number(tgt.tetap)||0)   + (Number(src.tetap)||0);
-             tgt.kontrak = (Number(tgt.kontrak)||0) + (Number(src.kontrak)||0);
-             tgt.yayasan = (Number(tgt.yayasan)||0) + (Number(src.yayasan)||0);
-           }
-        });
+      // Normalisasi helper (hapus spasi, huruf kecil semua) biar pasti ketemu
+      const norm = s => String(s).trim().toLowerCase();
+
+      // 1. Cari KEY ASLI di dataMap (karena object key case sensitive)
+      let actualSource = Object.keys(dataMap).find(k => norm(k) === norm(sourceKey));
+      let actualTarget = Object.keys(dataMap).find(k => norm(k) === norm(targetKey));
+
+      // Jika "Injection" gak ketemu, coba cari "Inject" (nama alias)
+      if(!actualTarget) actualTarget = Object.keys(dataMap).find(k => norm(k) === "inject");
+
+      // Kalau data SOURCE dan TARGET ditemukan, kita gabung nilainya
+      if (actualSource && actualTarget) {
+         dates.forEach(d => {
+            if(!dataMap[actualTarget][d]) dataMap[actualTarget][d] = {tetap:0, kontrak:0, yayasan:0};
+            
+            const src = dataMap[actualSource][d];
+            // Kalau Operator Bahan ada isinya di tanggal ini
+            if(src) {
+               const tgt = dataMap[actualTarget][d];
+               // Tambahkan ke target
+               tgt.tetap   = (Number(tgt.tetap)||0)   + (Number(src.tetap)||0);
+               tgt.kontrak = (Number(tgt.kontrak)||0) + (Number(src.kontrak)||0);
+               tgt.yayasan = (Number(tgt.yayasan)||0) + (Number(src.yayasan)||0);
+            }
+         });
       }
 
-      // Filter: Buat list proses baru untuk Excel, HILANGKAN 'Operator Bahan'
-      // supaya tidak muncul double (karena nilainya sudah masuk ke Injection)
-      const excelProcs = PROC.filter(p => p.name !== sourceName);
+      // 2. Filter List Proses untuk Excel
+      // Hapus "Operator Bahan" dari list PROC, pakai normalisasi juga biar aman
+      const excelProcs = PROC.filter(p => norm(p.name) !== norm(sourceKey));
 
-      // Mulai buat Excel dari excelProcs (bukan PROC biasa)
+      // Mulai susun Array Excel
       const wsData = [
         ["", "", "Tanggal", "", "", "", "", ""] 
       ];
@@ -688,9 +693,10 @@
       
       let currentRow = 2;
 
-      // Loop pakai excelProcs yg sudah difilter
+      // Loop pakai excelProcs yg sudah difilter (Operator Bahan GAK AKAN MUNCUL)
       excelProcs.forEach(proc => {
         const pName = proc.name;
+        // Ambil data pakai nama aslinya di map
         const pData = dataMap[pName] || {};
 
         ['tetap', 'kontrak', 'yayasan'].forEach((type, idx) => {
@@ -705,8 +711,9 @@
 
           dates.forEach(dateISO => {
             const dayData = pData[dateISO];
-            const val = dayData ? dayData[type] : "-";
-            row.push(val === 0 ? "-" : val);
+            const val = dayData ? dayData[type] : 0;
+            // PERBAIKAN: Jika nilai null/0, tulis angka 0 (bukan "-")
+            row.push(val === null || val === undefined ? 0 : Number(val));
           });
 
           wsData.push(row);
