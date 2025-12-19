@@ -609,7 +609,7 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL BARU (DENGAN PERBAIKAN MERGE & ANGKA 0) ---
+  // --- FUNGSI EXPORT EXCEL REVISI (Cross-Department Merge) ---
   async function exportToExcelStyled() {
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
@@ -628,75 +628,70 @@
         headerDates.push(d.getDate().toString()); 
       }
 
+      // REVISI: Tarik data SEMUA center, bukan cuma center yg aktif
+      // Supaya 'Stamping Logo' dari Assembly bisa kebaca saat buka Injection
       const { data: rawData, error } = await supa
         .from('daily_rekap')
         .select('*')
-        .eq('center', CENTER)
+        // HAPUS filter .eq('center', CENTER) agar dapat data global
         .in('work_date', dates)
         .order('process_sort');
         
       if(error) throw error;
 
-      // Mapping data berdasarkan Nama Proses dan Tanggal
+      // Mapping data
       const dataMap = {};
       rawData.forEach(r => {
         if(!dataMap[r.process_name]) dataMap[r.process_name] = {};
         dataMap[r.process_name][r.work_date] = r;
       });
 
-      // === LOGIC GABUNG: Operator Bahan -> Injection ===
-      // Pastikan nama ini sesuai persis dengan screenshot/database
-      const sourceKey = "Operator Bahan"; 
-      const targetKey = "Injection";
+      // === CONFIG MERGE DATA (Gabung antar departemen) ===
+      const mergers = [
+        { src: "Operator Bahan", dest: "Injection" }, // Operator Bahan -> Injection
+        { src: "Operator Bahan", dest: "Inject" },    // Jaga-jaga nama alias
+        { src: "Stamping Logo",  dest: "Logo" }       // REVISI: Stamping Logo -> Logo
+      ];
 
-      // Normalisasi helper (hapus spasi, huruf kecil semua) biar pasti ketemu
       const norm = s => String(s).trim().toLowerCase();
 
-      // 1. Cari KEY ASLI di dataMap (karena object key case sensitive)
-      let actualSource = Object.keys(dataMap).find(k => norm(k) === norm(sourceKey));
-      let actualTarget = Object.keys(dataMap).find(k => norm(k) === norm(targetKey));
+      mergers.forEach(m => {
+        // Cari key asli di dataMap (case insensitive)
+        const srcKey  = Object.keys(dataMap).find(k => norm(k) === norm(m.src));
+        const destKey = Object.keys(dataMap).find(k => norm(k) === norm(m.dest));
 
-      // Jika "Injection" gak ketemu, coba cari "Inject" (nama alias)
-      if(!actualTarget) actualTarget = Object.keys(dataMap).find(k => norm(k) === "inject");
+        // Jika sumber & tujuan ada datanya, kita gabung
+        if (srcKey && destKey) {
+           dates.forEach(d => {
+              if(!dataMap[destKey][d]) dataMap[destKey][d] = {tetap:0, kontrak:0, yayasan:0};
+              const srcData = dataMap[srcKey][d];
+              
+              if(srcData) {
+                 const tgt = dataMap[destKey][d];
+                 tgt.tetap   = (Number(tgt.tetap)||0)   + (Number(srcData.tetap)||0);
+                 tgt.kontrak = (Number(tgt.kontrak)||0) + (Number(srcData.kontrak)||0);
+                 tgt.yayasan = (Number(tgt.yayasan)||0) + (Number(srcData.yayasan)||0);
+              }
+           });
+        }
+      });
 
-      // Kalau data SOURCE dan TARGET ditemukan, kita gabung nilainya
-      if (actualSource && actualTarget) {
-         dates.forEach(d => {
-            if(!dataMap[actualTarget][d]) dataMap[actualTarget][d] = {tetap:0, kontrak:0, yayasan:0};
-            
-            const src = dataMap[actualSource][d];
-            // Kalau Operator Bahan ada isinya di tanggal ini
-            if(src) {
-               const tgt = dataMap[actualTarget][d];
-               // Tambahkan ke target
-               tgt.tetap   = (Number(tgt.tetap)||0)   + (Number(src.tetap)||0);
-               tgt.kontrak = (Number(tgt.kontrak)||0) + (Number(src.kontrak)||0);
-               tgt.yayasan = (Number(tgt.yayasan)||0) + (Number(src.yayasan)||0);
-            }
-         });
-      }
+      // Filter List Proses untuk Excel
+      // Kita tetap pakai list PROC (yang sesuai tab aktif),
+      // TAPI kita buang proses yang sudah di-merge (sumbernya) agar tidak double
+      const blacklist = mergers.map(m => norm(m.src));
+      const excelProcs = PROC.filter(p => !blacklist.includes(norm(p.name)));
 
-      // 2. Filter List Proses untuk Excel
-      // Hapus "Operator Bahan" dari list PROC, pakai normalisasi juga biar aman
-      const excelProcs = PROC.filter(p => norm(p.name) !== norm(sourceKey));
-
-      // Mulai susun Array Excel
-      const wsData = [
-        ["", "", "Tanggal", "", "", "", "", ""] 
-      ];
+      // Susun Excel
+      const wsData = [ ["", "", "Tanggal", "", "", "", "", ""] ];
       const rowDates = ["Proses", "Status", ...headerDates];
       wsData.push(rowDates);
 
-      const merges = [
-        { s: {r:0, c:2}, e: {r:0, c:7} } 
-      ]; 
-      
+      const merges = [ { s: {r:0, c:2}, e: {r:0, c:7} } ]; 
       let currentRow = 2;
 
-      // Loop pakai excelProcs yg sudah difilter (Operator Bahan GAK AKAN MUNCUL)
       excelProcs.forEach(proc => {
         const pName = proc.name;
-        // Ambil data pakai nama aslinya di map
         const pData = dataMap[pName] || {};
 
         ['tetap', 'kontrak', 'yayasan'].forEach((type, idx) => {
@@ -712,7 +707,7 @@
           dates.forEach(dateISO => {
             const dayData = pData[dateISO];
             const val = dayData ? dayData[type] : 0;
-            // PERBAIKAN: Jika nilai null/0, tulis angka 0 (bukan "-")
+            // Tulis 0 jika kosong
             row.push(val === null || val === undefined ? 0 : Number(val));
           });
 
@@ -726,6 +721,7 @@
 
       ws['!merges'] = merges;
 
+      // Styling
       const range = XLSX.utils.decode_range(ws['!ref']);
       const styleHeader = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { bold: true, sz: 11 }, alignment: { horizontal: "center", vertical: "center" }, border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} } };
       const styleProcess = { font: { bold: true }, alignment: { vertical: "center", horizontal: "left" }, border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} } };
@@ -738,7 +734,6 @@
           if (!ws[cellAddr]) ws[cellAddr] = { t: 's', v: '' };
           
           let cellStyle = {...styleData};
-
           if (R <= 1 && C >= 2) cellStyle = styleHeader;
           else if (C === 0 && R >= 2) cellStyle = styleProcess;
           else if (C === 1 && R >= 2) cellStyle = styleType;
