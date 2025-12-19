@@ -365,7 +365,7 @@
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-  window.APP_VERSION = '2025-12-05-FIX';
+  window.APP_VERSION = '2025-12-05-FIX-REV-03';
 
   const SUPABASE_URL  = 'https://xpcmrdkdnbqdohjjqxds.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwY21yZGtkbmJxZG9oampxeGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5Mzc2ODAsImV4cCI6MjA3ODUxMzY4MH0.ZLEzHKaWjic5vn_zAiD6S2jZgU-s2E-Z8Kbd4M66zE8';
@@ -609,7 +609,7 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL FINAL (FIX STAMPING UPDOWN & ROLL + SELF MERGE) ---
+  // --- FUNGSI EXPORT EXCEL FINAL: FIX Stamping Up Down & Operator Bahan ---
   async function exportToExcelStyled() {
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
@@ -628,7 +628,7 @@
         headerDates.push(d.getDate().toString()); 
       }
 
-      // Tarik SEMUA data (dari semua center) untuk rentang tanggal ini
+      // 1. Tarik SEMUA data (Center Injection + Assembly)
       const { data: rawData, error } = await supa
         .from('daily_rekap')
         .select('*')
@@ -637,54 +637,45 @@
         
       if(error) throw error;
 
-      // HELPER: Normalisasi Nama (Hapus spasi, kecilkan huruf) biar match 100%
       const norm = s => String(s).trim().toLowerCase().replace(/\s+/g,'');
 
-      // MAPPING DATA: "Laci Terpisah per Center"
-      // Structure: dataMap[normalized_name][date][center_name] = data
+      // 2. MAPPING DATA: "Laci Terpisah per Center"
+      // dataMap[nama_proses][tanggal][nama_center] = data
       const dataMap = {};
       rawData.forEach(r => {
         const key = norm(r.process_name);
         if(!dataMap[key]) dataMap[key] = {};
         if(!dataMap[key][r.work_date]) dataMap[key][r.work_date] = {};
-        
-        // Simpan data di laci center masing-masing (Injection sendiri, Assembly sendiri)
         dataMap[key][r.work_date][r.center] = r;
       });
 
-      // === CONFIG MERGE ===
-      // Daftar aturan penggabungan data antar departemen
-      // SRC: Sumber data (bisa dari dept lain) -> DEST: Target data (di laporan ini)
+      // 3. ATURAN MERGE (PENTING!)
       const mergers = [
         { src: "Operator Bahan",   dest: "Injection" },
         { src: "Operator Bahan",   dest: "Inject" },
         { src: "Stamping Logo",    dest: "Logo" },
-        // TAMBAHAN PENTING: Merge sesama nama (Assembly -> Injection)
+        // KHUSUS NAMA KEMBAR (Assembly -> Injection)
         { src: "Stamping Up Down", dest: "Stamping Up Down" },
         { src: "Stamping Roll",    dest: "Stamping Roll" }
       ];
 
-      // Filter List Proses (Jangan tampilkan sumber merge di list utama jika namanya beda)
-      // Kalau namanya sama (src==dest), tetap tampilkan di list utama, nanti datanya yg digabung.
+      // Filter List Proses (Jangan tampilkan sumber merge di list utama jika namanya BEDA)
       const blacklist = mergers
-        .filter(m => norm(m.src) !== norm(m.dest)) // Hanya blacklist kalau namanya beda (misal Operator Bahan)
+        .filter(m => norm(m.src) !== norm(m.dest)) 
         .map(m => norm(m.src));
-        
       const excelProcs = PROC.filter(p => !blacklist.includes(norm(p.name)));
 
-      // Susun Excel
+      // 4. SUSUN EXCEL
       const wsData = [ ["", "", "Tanggal", "", "", "", "", ""] ];
       const rowDates = ["Proses", "Status", ...headerDates];
       wsData.push(rowDates);
-
       const merges = [ { s: {r:0, c:2}, e: {r:0, c:7} } ]; 
       let currentRow = 2;
 
       excelProcs.forEach((proc, procIndex) => {
         const pName = proc.name;
-        const key = norm(pName); // Kunci normalisasi
+        const key = norm(pName); 
 
-        // Spacer antar tabel proses
         if (procIndex > 0) { wsData.push([""]); currentRow++; }
 
         ['tetap', 'kontrak', 'yayasan'].forEach((type, idx) => {
@@ -692,42 +683,43 @@
           if(idx === 0) {
             row.push(pName);
             merges.push({ s: {r: currentRow, c: 0}, e: {r: currentRow + 2, c: 0} });
-          } else {
-            row.push(""); 
-          }
+          } else { row.push(""); }
           row.push(type);
 
           dates.forEach(dateISO => {
-            // 1. AMBIL DATA UTAMA (HANYA DARI CENTER SAAT INI / LOKAL)
-            const dateEntries = dataMap[key] && dataMap[key][dateISO];
             let val = 0;
-            
-            // Ambil data milik center ini (misal Injection)
-            if(dateEntries && dateEntries[CENTER]) {
-               val = Number(dateEntries[CENTER][type] || 0);
+            const dateEntries = dataMap[key] && dataMap[key][dateISO];
+
+            // --- LOGIC BARU: BEDA PERLAKUAN TIAP RULE ---
+            const rule = mergers.find(m => norm(m.dest) === key);
+
+            if (rule && norm(rule.src) === norm(rule.dest)) {
+                // CASE 1: NAMA SAMA (Stamping Up Down) -> JUMLAHKAN SEMUANYA
+                // Jangan peduli center. Ada di Injection? Ambil. Ada di Assembly? Ambil.
+                if (dateEntries) {
+                    Object.values(dateEntries).forEach(v => {
+                        val += Number(v[type] || 0);
+                    });
+                }
+            } else {
+                // CASE 2: NORMAL (Injection) -> AMBIL LOCAL DULU
+                if (dateEntries && dateEntries[CENTER]) {
+                   val = Number(dateEntries[CENTER][type] || 0);
+                }
+                
+                // KALAU ADA RULE "Operator Bahan -> Injection", TAMBAHKAN.
+                if (rule) {
+                   const srcKey = norm(rule.src);
+                   const srcDataAllCenters = dataMap[srcKey] && dataMap[srcKey][dateISO];
+                   if (srcDataAllCenters) {
+                      Object.values(srcDataAllCenters).forEach(v => {
+                         val += Number(v[type] || 0);
+                      });
+                   }
+                }
             }
 
-            // 2. CEK APAKAH PERLU MERGE DARI CENTER LAIN?
-            // Cari rule yang DEST-nya adalah proses ini
-            const mergeRule = mergers.find(m => norm(m.dest) === key);
-            
-            if(mergeRule) {
-               const srcKey = norm(mergeRule.src);
-               const srcEntries = dataMap[srcKey] && dataMap[srcKey][dateISO];
-               
-               if(srcEntries) {
-                 // Loop semua center yang punya data dengan nama 'srcKey'
-                 Object.entries(srcEntries).forEach(([srcCenter, srcRow]) => {
-                    // PENTING: Jangan tambahkan lagi data dari center sendiri (karena sudah diambil di step 1)
-                    // Ini mencegah double counting kalau src == dest
-                    if (srcCenter !== CENTER) {
-                       val += Number(srcRow[type] || 0);
-                    }
-                 });
-               }
-            }
-
-            row.push(val === 0 ? 0 : val); // Tampilkan 0 jika kosong
+            row.push(val === 0 ? 0 : val);
           });
 
           wsData.push(row);
@@ -737,7 +729,6 @@
 
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(wsData);
-
       ws['!merges'] = merges;
 
       // Styling
@@ -751,16 +742,13 @@
         for (let C = range.s.c; C <= range.e.c; ++C) {
           const cellAddr = XLSX.utils.encode_cell({r: R, c: C});
           if (!ws[cellAddr]) ws[cellAddr] = { t: 's', v: '' };
-          
           let cellStyle = {...styleData};
           if (R <= 1 && C >= 2) cellStyle = styleHeader;
           else if (C === 0 && R >= 2) cellStyle = styleProcess;
           else if (C === 1 && R >= 2) cellStyle = styleType;
-          
           ws[cellAddr].s = cellStyle;
         }
       }
-
       ws['!cols'] = [ { wch: 20 }, { wch: 10 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 }, { wch: 5 } ];
 
       XLSX.utils.book_append_sheet(wb, ws, "Laporan Produksi");
