@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#022c22">
+  <meta name="theme-color" content="#121212">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
-  <title>Absen Produksi (Berkah Edition)</title>
+  <title>Absen Produksi</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,24 +15,26 @@
 
   <style>
     :root {
-      /* === PALET WARNA ISLAMI (Emerald & Gold) === */
-      --bg-body: #022c22;       /* Hijau Gelap Sekali */
-      --bg-card: #064e3b;       /* Hijau Emerald */
-      --bg-input: #065f46;      /* Hijau Input */
+      /* === PALET WARNA TITANIUM LUXURY (Dark Grey & Gold) === */
+      --bg-body: #121212;       /* Hitam/Abu Gelap Pekat (Background Utama) */
+      --bg-card: #1e1e1e;       /* Abu-abu 'Arang' (Background Kotak) */
+      --bg-input: #2d2d2d;      /* Abu-abu sedikit terang untuk Input */
       
-      --text-main: #ecfdf5;     /* Putih Kehijauan */
-      --text-muted: #a7f3d0;    /* Hijau Muda Pucat */
+      --text-main: #e5e5e5;     /* Putih Gading (Tidak terlalu silau) */
+      --text-muted: #a3a3a3;    /* Abu-abu soft untuk label/hint */
       
       --gold: #d4af37;          /* EMAS (Primary) */
       --gold-hover: #b4942b;
+      --gold-dim: rgba(212, 175, 55, 0.15); /* Emas transparan */
+      
+      --border-subtle: #404040; /* Garis pemisah halus */
       
       --success: #10b981;       
-      --warn: #fbbf24;       
+      --warn: #f59e0b;       
       --danger: #ef4444;        
       
-      --border: #d4af37;        /* Border Emas */
       --radius: 12px;
-      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
     }
     
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -40,13 +42,14 @@
     body { 
       margin: 0; 
       background-color: var(--bg-body);
-      /* Pattern Halus */
-      background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.15) 1px, transparent 0);
+      /* Pattern Halus Titanium */
+      background-image: radial-gradient(var(--border-subtle) 1px, transparent 1px);
       background-size: 30px 30px;
       color: var(--text-main); 
       font-family: 'Plus Jakarta Sans', sans-serif; 
       font-size: 14px; 
       line-height: 1.5; 
+      padding-bottom: 50px;
     }
     
     /* Layout Utama */
@@ -59,7 +62,7 @@
       color: var(--gold);
       text-align: center;
       margin-bottom: 0.2rem;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      text-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
     }
     
     .slogan {
@@ -73,7 +76,8 @@
     /* Header Card */
     .header-card {
       background: var(--bg-card); 
-      border: 1px solid var(--gold); 
+      border: 1px solid var(--border-subtle);
+      border-top: 1px solid var(--gold); /* Hanya atas yg emas */
       border-radius: var(--radius);
       padding: 20px; margin-bottom: 20px; 
       box-shadow: var(--shadow);
@@ -87,18 +91,23 @@
     
     input, select {
       background: var(--bg-input); 
-      border: 1px solid #374151; 
+      border: 1px solid var(--border-subtle); 
       color: var(--text-main);
       padding: 10px 12px; border-radius: 8px; font-size: 14px; width: 100%; outline: none;
       transition: border-color 0.2s;
     }
-    input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2); }
+    input:focus, select:focus { 
+      border-color: var(--gold); 
+      background: #333;
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1); 
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
 
     /* Tabs Work Center */
     .tabs { 
       background: var(--bg-input); 
       padding: 4px; border-radius: 10px; 
-      border: 1px solid #374151; 
+      border: 1px solid var(--border-subtle); 
       display: flex; 
     }
     .tab {
@@ -107,28 +116,28 @@
     }
     .tab.active { 
       background: var(--gold); 
-      color: #022c22; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+      color: #1a1a1a; /* Hitam agar kontras di emas */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4); 
       font-weight: 800; 
     }
 
     /* Badge Info */
     .info-bar { 
       margin-top: 16px; display: flex; justify-content: space-between; align-items: center; 
-      border-top: 1px solid rgba(212, 175, 55, 0.3); padding-top: 16px; flex-wrap: wrap; gap: 10px; 
+      border-top: 1px solid var(--border-subtle); padding-top: 16px; flex-wrap: wrap; gap: 10px; 
     }
     .badge { 
-      background: rgba(16, 185, 129, 0.2); color: var(--success); 
+      background: rgba(16, 185, 129, 0.1); color: var(--success); 
       padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; 
       border: 1px solid var(--success); 
     }
     .shortcuts { font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; }
-    .shortcuts b { color: var(--gold); background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; }
+    .shortcuts b { color: var(--gold); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
 
     /* Grid Table Container */
     .grid-card {
       background: var(--bg-card); 
-      border: 1px solid var(--gold); 
+      border: 1px solid var(--border-subtle); 
       border-radius: var(--radius);
       overflow: hidden; 
       box-shadow: var(--shadow);
@@ -138,68 +147,71 @@
     table { width: 100%; border-collapse: collapse; min-width: 600px; }
     
     th {
-      background: #022c22; color: var(--gold); 
+      background: #252525; color: var(--gold); 
       font-weight: 700; font-size: 12px;
       text-transform: uppercase; text-align: left; padding: 14px 16px;
-      border-bottom: 2px solid var(--gold);
+      border-bottom: 1px solid var(--gold);
     }
-    td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); vertical-align: middle; }
+    td { padding: 10px 16px; border-bottom: 1px solid #333; vertical-align: middle; color: var(--text-main); }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(212, 175, 55, 0.05); }
+    tr:hover td { background: #2a2a2a; }
 
     /* Input Cells */
     input.cell {
-      background: rgba(0,0,0,0.2); 
+      background: transparent; 
       border: 1px solid transparent; 
+      border-bottom: 1px solid #555;
+      border-radius: 0;
       text-align: center;
       font-weight: 700; color: var(--gold); width: 100%; max-width: 80px;
     }
     input.cell:focus { 
       border-color: var(--gold); 
-      background: var(--bg-input); 
-      color: var(--text-main);
+      background: #333; 
+      color: #fff;
+      border-radius: 4px;
     }
     
     .process-name { font-weight: 600; color: var(--text-main); }
     .total-cell { font-weight: 800; color: var(--success); text-align: center; font-size: 1.1em; }
 
     /* Footer Totals */
-    tfoot tr { background: #022c22; font-weight: 700; }
-    tfoot td { color: var(--gold); text-align: center; padding: 16px; font-size: 15px; border-top: 2px solid var(--gold); }
+    tfoot tr { background: #252525; font-weight: 700; }
+    tfoot td { color: var(--gold); text-align: center; padding: 16px; font-size: 15px; border-top: 1px solid var(--gold); }
     tfoot td:first-child { text-align: right; color: var(--text-muted); }
 
     /* Action Bar */
     .actions {
-      padding: 16px; background: #022c22; border-top: 1px solid var(--gold);
+      padding: 16px; background: #151515; border-top: 1px solid var(--border-subtle);
       display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
     }
     
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      background: var(--bg-input); border: 1px solid var(--gold); color: var(--text-main);
+      background: var(--bg-input); border: 1px solid var(--gold); color: var(--gold);
       padding: 10px 16px; border-radius: 50px; font-weight: 600; cursor: pointer;
       transition: all 0.2s; font-size: 13px;
     }
-    .btn:hover { background: var(--gold); color: #022c22; transform: translateY(-1px); }
+    .btn:hover { background: var(--gold); color: #1a1a1a; transform: translateY(-1px); }
     .btn:active { transform: translateY(0); }
     
     .btn.primary { 
       background: linear-gradient(to bottom, #d4af37, #b4942b); 
-      border: none; color: #022c22; 
-      box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+      border: none; color: #1a1a1a; 
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
     }
     .btn.primary:hover { filter: brightness(1.1); }
     
     .btn.success { border-color: var(--success); color: var(--success); background: transparent; }
-    .btn.success:hover { background: var(--success); color: #022c22; }
+    .btn.success:hover { background: var(--success); color: #1a1a1a; }
     
     .btn.warn { border-color: var(--warn); color: var(--warn); background: transparent; }
-    .btn.warn:hover { background: var(--warn); color: #451a03; }
+    .btn.warn:hover { background: var(--warn); color: #1a1a1a; }
 
     /* Rekap Section */
-    #rekapWrap { margin-top: 30px; border-color: var(--warn); box-shadow: 0 0 20px rgba(251, 191, 36, 0.1); }
+    #rekapWrap { margin-top: 30px; border: 1px solid var(--warn); box-shadow: 0 0 20px rgba(245, 158, 11, 0.05); }
     .rekap-header {
-      background: rgba(251, 191, 36, 0.1); color: var(--warn); padding: 12px 16px;
+      background: rgba(245, 158, 11, 0.1); color: var(--warn); padding: 12px 16px;
       font-weight: 700; display: flex; justify-content: space-between; align-items: center;
       border-bottom: 1px solid var(--warn);
     }
@@ -207,7 +219,7 @@
     /* Shift Pills */
     .shift-status { display: flex; gap: 8px; }
     .pill {
-      font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--text-muted);
+      font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-subtle);
       background: transparent; opacity: 0.7; color: var(--text-muted);
     }
     .pill.filled { opacity: 1; border-color: var(--success); color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); }
@@ -220,12 +232,12 @@
       border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       display: none; align-items: center; gap: 12px; z-index: 999; color: var(--gold);
     }
-    #btnReload { background: var(--gold); border: none; color: #022c22; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; }
+    #btnReload { background: var(--gold); border: none; color: #1a1a1a; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; }
 
     @media (max-width: 600px) {
       .wrap { padding: 12px; }
       .header-card, .grid-card { padding: 0; border-radius: 0; border-left: 0; border-right: 0; }
-      .header-card { padding: 16px; border-radius: 12px; border: 1px solid var(--gold); }
+      .header-card { padding: 16px; border-radius: 12px; border: 1px solid var(--border-subtle); border-top: 1px solid var(--gold); }
       .shortcuts { display: none; }
       th, td { padding: 10px; font-size: 13px; }
       input.cell { max-width: 60px; padding: 8px 4px; }
@@ -604,7 +616,7 @@
   
   function toast(msg){
     const div = document.createElement('div');
-    Object.assign(div.style,{ position:'fixed',bottom:'30px',left:'50%',transform:'translateX(-50%)', background:'#10b981', padding:'10px 20px', borderRadius:'30px', color:'#064e3b', fontWeight:'600', zIndex:9999, boxShadow:'0 5px 15px rgba(0,0,0,0.3)' });
+    Object.assign(div.style,{ position:'fixed',bottom:'30px',left:'50%',transform:'translateX(-50%)', background:'#10b981', padding:'10px 20px', borderRadius:'30px', color:'#022c22', fontWeight:'600', zIndex:9999, boxShadow:'0 5px 15px rgba(0,0,0,0.3)' });
     div.textContent = msg; document.body.appendChild(div);
     setTimeout(()=>div.remove(),2000);
   }
