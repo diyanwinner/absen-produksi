@@ -609,7 +609,7 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL FINAL (FIX STAMPING UPDOWN & ROLL) ---
+  // --- FUNGSI EXPORT EXCEL FINAL (FIX STAMPING UPDOWN & ROLL + SELF MERGE) ---
   async function exportToExcelStyled() {
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
@@ -628,6 +628,7 @@
         headerDates.push(d.getDate().toString()); 
       }
 
+      // Tarik SEMUA data (dari semua center) untuk rentang tanggal ini
       const { data: rawData, error } = await supa
         .from('daily_rekap')
         .select('*')
@@ -636,7 +637,7 @@
         
       if(error) throw error;
 
-      // HELPER: Normalisasi Nama (Hapus spasi, kecilkan huruf)
+      // HELPER: Normalisasi Nama (Hapus spasi, kecilkan huruf) biar match 100%
       const norm = s => String(s).trim().toLowerCase().replace(/\s+/g,'');
 
       // MAPPING DATA: "Laci Terpisah per Center"
@@ -647,20 +648,28 @@
         if(!dataMap[key]) dataMap[key] = {};
         if(!dataMap[key][r.work_date]) dataMap[key][r.work_date] = {};
         
-        // Simpan data di laci center masing-masing
+        // Simpan data di laci center masing-masing (Injection sendiri, Assembly sendiri)
         dataMap[key][r.work_date][r.center] = r;
       });
 
       // === CONFIG MERGE ===
-      // Ini daftar nama yang BOLEH ngambil dari center tetangga
+      // Daftar aturan penggabungan data antar departemen
+      // SRC: Sumber data (bisa dari dept lain) -> DEST: Target data (di laporan ini)
       const mergers = [
-        { src: "Operator Bahan", dest: "Injection" },
-        { src: "Operator Bahan", dest: "Inject" },
-        { src: "Stamping Logo",  dest: "Logo" } 
+        { src: "Operator Bahan",   dest: "Injection" },
+        { src: "Operator Bahan",   dest: "Inject" },
+        { src: "Stamping Logo",    dest: "Logo" },
+        // TAMBAHAN PENTING: Merge sesama nama (Assembly -> Injection)
+        { src: "Stamping Up Down", dest: "Stamping Up Down" },
+        { src: "Stamping Roll",    dest: "Stamping Roll" }
       ];
 
-      // Filter List Proses (Jangan tampilkan sumber merge di list utama)
-      const blacklist = mergers.map(m => norm(m.src));
+      // Filter List Proses (Jangan tampilkan sumber merge di list utama jika namanya beda)
+      // Kalau namanya sama (src==dest), tetap tampilkan di list utama, nanti datanya yg digabung.
+      const blacklist = mergers
+        .filter(m => norm(m.src) !== norm(m.dest)) // Hanya blacklist kalau namanya beda (misal Operator Bahan)
+        .map(m => norm(m.src));
+        
       const excelProcs = PROC.filter(p => !blacklist.includes(norm(p.name)));
 
       // Susun Excel
@@ -673,9 +682,10 @@
 
       excelProcs.forEach((proc, procIndex) => {
         const pName = proc.name;
-        const key = norm(pName); // Pake kunci normalisasi
+        const key = norm(pName); // Kunci normalisasi
 
-        if (procIndex > 0) { wsData.push([""]); currentRow++; } // Spacer
+        // Spacer antar tabel proses
+        if (procIndex > 0) { wsData.push([""]); currentRow++; }
 
         ['tetap', 'kontrak', 'yayasan'].forEach((type, idx) => {
           const row = [];
@@ -688,8 +698,7 @@
           row.push(type);
 
           dates.forEach(dateISO => {
-            // 1. AMBIL DATA UTAMA (HANYA DARI CENTER SAAT INI)
-            // Ini kunci perbaikan Stamping Up Down & Roll
+            // 1. AMBIL DATA UTAMA (HANYA DARI CENTER SAAT INI / LOKAL)
             const dateEntries = dataMap[key] && dataMap[key][dateISO];
             let val = 0;
             
@@ -698,22 +707,27 @@
                val = Number(dateEntries[CENTER][type] || 0);
             }
 
-            // 2. CEK APAKAH PERLU MERGE?
+            // 2. CEK APAKAH PERLU MERGE DARI CENTER LAIN?
+            // Cari rule yang DEST-nya adalah proses ini
             const mergeRule = mergers.find(m => norm(m.dest) === key);
+            
             if(mergeRule) {
-               // Cari data sumber (misal Operator Bahan)
                const srcKey = norm(mergeRule.src);
                const srcEntries = dataMap[srcKey] && dataMap[srcKey][dateISO];
                
                if(srcEntries) {
-                 // Jumlahkan semua data sumber dari center manapun (misal dr Assembly)
-                 Object.values(srcEntries).forEach(srcRow => {
-                    val += Number(srcRow[type] || 0);
+                 // Loop semua center yang punya data dengan nama 'srcKey'
+                 Object.entries(srcEntries).forEach(([srcCenter, srcRow]) => {
+                    // PENTING: Jangan tambahkan lagi data dari center sendiri (karena sudah diambil di step 1)
+                    // Ini mencegah double counting kalau src == dest
+                    if (srcCenter !== CENTER) {
+                       val += Number(srcRow[type] || 0);
+                    }
                  });
                }
             }
 
-            row.push(val);
+            row.push(val === 0 ? 0 : val); // Tampilkan 0 jika kosong
           });
 
           wsData.push(row);
