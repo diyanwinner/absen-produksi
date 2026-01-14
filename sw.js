@@ -1,10 +1,8 @@
-/* Service Worker: network-first + auto reload */
-// GANTI VERSION DI BAWAH INI AGAR CACHE INDEX.HTML LAMA TERGANTI
-const VERSION   = '2025-12-05-FIX01';
+/* Service Worker: STALE-WHILE-REVALIDATE (Instan Load) */
+const VERSION   = '2026-01-14-PERF-V1'; // Ganti versi biar cache lama dibuang
 const CACHE_KEY = `absen-prod-cache::${VERSION}`;
 
 const CORE_ASSETS = [
-  // inti yang harus cepat tersedia; sisanya network-first
   './',
   './index.html',
   './sw-register.js'
@@ -18,6 +16,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
+    // Hapus cache versi lama biar ga numpuk
     await Promise.all(keys.filter(k => k.startsWith('absen-prod-cache::') && k !== CACHE_KEY)
                          .map(k => caches.delete(k)));
     await self.clients.claim();
@@ -30,26 +29,25 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Network-first untuk semua GET
+// STRATEGI BARU: Cek Cache dulu -> Tampilkan -> Update Background
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
   e.respondWith((async () => {
-    try {
-      const fresh = await fetch(req);
-      const cache = await caches.open(CACHE_KEY);
+    const cache = await caches.open(CACHE_KEY);
+    const cachedResp = await cache.match(req);
+
+    // Fetch network untuk update cache di masa depan
+    const networkFetch = fetch(req).then(fresh => {
       cache.put(req, fresh.clone());
       return fresh;
-    } catch {
-      const cache = await caches.open(CACHE_KEY);
-      const cached = await cache.match(req);
-      if (cached) return cached;
-      // fallback minimal ke index (SPA)
-      if (req.mode === 'navigate') {
-        return cache.match('./index.html');
-      }
-      throw new Error('Network error & no cache');
-    }
+    }).catch(() => {
+      // Kalau offline, ya sudah diam saja
+    });
+
+    // Kalau ada di cache, kasih langsung (NGEBUT!)
+    // Kalau ga ada, baru tunggu network
+    return cachedResp || networkFetch;
   })());
 });
