@@ -11,23 +11,22 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.min.js"></script>
-
   <style>
+    /* CSS TETAP SAMA SEPERTI SEBELUMNYA */
     :root {
       /* === PALET WARNA TITANIUM LUXURY (Dark Grey & Gold) === */
-      --bg-body: #121212;       /* Hitam/Abu Gelap Pekat (Background Utama) */
-      --bg-card: #1e1e1e;       /* Abu-abu 'Arang' (Background Kotak) */
-      --bg-input: #2d2d2d;      /* Abu-abu sedikit terang untuk Input */
+      --bg-body: #121212;       
+      --bg-card: #1e1e1e;       
+      --bg-input: #2d2d2d;      
       
-      --text-main: #e5e5e5;     /* Putih Gading (Tidak terlalu silau) */
-      --text-muted: #a3a3a3;    /* Abu-abu soft untuk label/hint */
+      --text-main: #e5e5e5;     
+      --text-muted: #a3a3a3;    
       
-      --gold: #d4af37;          /* EMAS (Primary) */
+      --gold: #d4af37;          
       --gold-hover: #b4942b;
-      --gold-dim: rgba(212, 175, 55, 0.15); /* Emas transparan */
+      --gold-dim: rgba(212, 175, 55, 0.15); 
       
-      --border-subtle: #404040; /* Garis pemisah halus */
+      --border-subtle: #404040; 
       
       --success: #10b981;       
       --warn: #f59e0b;       
@@ -42,7 +41,6 @@
     body { 
       margin: 0; 
       background-color: var(--bg-body);
-      /* Pattern Halus Titanium */
       background-image: radial-gradient(var(--border-subtle) 1px, transparent 1px);
       background-size: 30px 30px;
       color: var(--text-main); 
@@ -52,10 +50,8 @@
       padding-bottom: 50px;
     }
     
-    /* Layout Utama */
     .wrap { max-width:1200px; margin:0 auto; padding:20px; }
 
-    /* Header Bismillah */
     .bismillah {
       font-family: 'Amiri', serif;
       font-size: 2.2rem;
@@ -73,11 +69,10 @@
       margin-bottom: 2rem;
     }
     
-    /* Header Card */
     .header-card {
       background: var(--bg-card); 
       border: 1px solid var(--border-subtle);
-      border-top: 1px solid var(--gold); /* Hanya atas yg emas */
+      border-top: 1px solid var(--gold); 
       border-radius: var(--radius);
       padding: 20px; margin-bottom: 20px; 
       box-shadow: var(--shadow);
@@ -103,7 +98,6 @@
     }
     input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
 
-    /* Tabs Work Center */
     .tabs { 
       background: var(--bg-input); 
       padding: 4px; border-radius: 10px; 
@@ -116,12 +110,11 @@
     }
     .tab.active { 
       background: var(--gold); 
-      color: #1a1a1a; /* Hitam agar kontras di emas */
+      color: #1a1a1a; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.4); 
       font-weight: 800; 
     }
 
-    /* Badge Info */
     .info-bar { 
       margin-top: 16px; display: flex; justify-content: space-between; align-items: center; 
       border-top: 1px solid var(--border-subtle); padding-top: 16px; flex-wrap: wrap; gap: 10px; 
@@ -134,7 +127,6 @@
     .shortcuts { font-size: 12px; color: var(--text-muted); display: flex; gap: 12px; }
     .shortcuts b { color: var(--gold); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
 
-    /* Grid Table Container */
     .grid-card {
       background: var(--bg-card); 
       border: 1px solid var(--border-subtle); 
@@ -156,7 +148,6 @@
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: #2a2a2a; }
 
-    /* Input Cells */
     input.cell {
       background: transparent; 
       border: 1px solid transparent; 
@@ -175,12 +166,10 @@
     .process-name { font-weight: 600; color: var(--text-main); }
     .total-cell { font-weight: 800; color: var(--success); text-align: center; font-size: 1.1em; }
 
-    /* Footer Totals */
     tfoot tr { background: #252525; font-weight: 700; }
     tfoot td { color: var(--gold); text-align: center; padding: 16px; font-size: 15px; border-top: 1px solid var(--gold); }
     tfoot td:first-child { text-align: right; color: var(--text-muted); }
 
-    /* Action Bar */
     .actions {
       padding: 16px; background: #151515; border-top: 1px solid var(--border-subtle);
       display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
@@ -208,7 +197,6 @@
     .btn.warn { border-color: var(--warn); color: var(--warn); background: transparent; }
     .btn.warn:hover { background: var(--warn); color: #1a1a1a; }
 
-    /* Rekap Section */
     #rekapWrap { margin-top: 30px; border: 1px solid var(--warn); box-shadow: 0 0 20px rgba(245, 158, 11, 0.05); }
     .rekap-header {
       background: rgba(245, 158, 11, 0.1); color: var(--warn); padding: 12px 16px;
@@ -216,7 +204,6 @@
       border-bottom: 1px solid var(--warn);
     }
 
-    /* Shift Pills */
     .shift-status { display: flex; gap: 8px; }
     .pill {
       font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-subtle);
@@ -225,7 +212,6 @@
     .pill.filled { opacity: 1; border-color: var(--success); color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); }
     .pill.empty { opacity: 1; border-color: var(--danger); color: var(--danger); }
 
-    /* Toast */
     #updateToast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
       background: var(--bg-card); border: 1px solid var(--gold); padding: 12px 20px;
@@ -374,10 +360,12 @@
   <button id="btnReload">Refresh</button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.min.js" defer></script>
+
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-  window.APP_VERSION = '2025-12-26-FIX-EXCEL-LOGIC-V2';
+  window.APP_VERSION = '2026-01-14-PERF-V1'; // Update versi di sini juga
 
   const SUPABASE_URL  = 'https://xpcmrdkdnbqdohjjqxds.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwY21yZGtkbmJxZG9oampxeGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5Mzc2ODAsImV4cCI6MjA3ODUxMzY4MH0.ZLEzHKaWjic5vn_zAiD6S2jZgU-s2E-Z8Kbd4M66zE8';
@@ -420,7 +408,6 @@
     downloadCSV(csv,'rekap.csv');
   };
 
-  // --- LOGIC BARU: EXPORT EXCEL ---
   document.getElementById('btnExportXLSX').onclick = exportToExcelStyled;
 
   window.addEventListener('keydown', e=>{
@@ -621,8 +608,13 @@
     setTimeout(()=>div.remove(),2000);
   }
 
-  // --- FUNGSI EXPORT EXCEL FINAL: FIX Injection + Assembly & Merging ---
   async function exportToExcelStyled() {
+    // FUNGSI INI TETAP SAMA SEPERTI YANG KAMU PUNYA
+    // CUMA DIPANGGIL DI AKHIR KARENA SCRIPT EXCEL DI-LOAD DI BAWAH
+    if(typeof XLSX === 'undefined') {
+       alert("Script Excel sedang dimuat, coba 2 detik lagi...");
+       return;
+    }
     const btn = document.getElementById('btnExportXLSX');
     const originalText = btn.innerHTML;
     btn.innerHTML = 'Sedang Generate...';
@@ -632,7 +624,6 @@
       const dates = [];
       const headerDates = [];
       
-      // 1. Siapkan Range Tanggal (6 Hari)
       for(let i=0; i<6; i++) {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + i);
@@ -641,7 +632,6 @@
         headerDates.push(d.getDate().toString()); 
       }
 
-      // 2. FETCH PROSES: Ambil SEMUA (Injection + Assembly) biar Excel netral
       const { data: allProcs, error: pErr } = await supa
         .from('processes')
         .select('id,name,sort,center')
@@ -650,7 +640,6 @@
         
       if (pErr) throw pErr;
 
-      // Deduplikasi Proses
       const norm = s => String(s).trim().toLowerCase().replace(/\s+/g,'');
       const procMap = {};
       allProcs.forEach(p => {
@@ -658,14 +647,12 @@
         if(!procMap[k]) procMap[k] = p;
       });
 
-      // 3. DEFINISI RULE MERGE
       const mergers = [
         { src: "Operator Bahan",   dest: "Injection" },
-        { src: "Operator Bahan",   dest: "Inject" }, // Jaga-jaga typo
+        { src: "Operator Bahan",   dest: "Inject" }, 
         { src: "Stamping Logo",    dest: "Logo" },
       ];
 
-      // 4. LIST FINAL PROSES EXCEL (Filter Blacklist)
       const blacklist = mergers
         .filter(m => norm(m.src) !== norm(m.dest)) 
         .map(m => norm(m.src));
@@ -673,7 +660,6 @@
       const excelProcs = Object.values(procMap)
         .filter(p => !blacklist.includes(norm(p.name)));
 
-      // 5. TARIK DATA TRANSAKSI (REKAP)
       const { data: rawData, error } = await supa
         .from('daily_rekap')
         .select('*')
@@ -681,7 +667,6 @@
         
       if(error) throw error;
 
-      // 6. MAPPING DATA
       const dataMap = {};
       rawData.forEach(r => {
         const key = norm(r.process_name);
@@ -690,19 +675,16 @@
         dataMap[key][r.work_date][r.center] = r;
       });
 
-      // 7. SUSUN STRUKTUR EXCEL
       const wsData = [ ["", "", "Tanggal", "", "", "", "", ""] ];
       const rowDates = ["Proses", "Status", ...headerDates];
       wsData.push(rowDates);
       const merges = [ { s: {r:0, c:2}, e: {r:0, c:7} } ]; 
       let currentRow = 2;
 
-      // --- LOOP BARIS UTAMA ---
       excelProcs.forEach((proc, procIndex) => {
         const pName = proc.name;
         const key = norm(pName); 
 
-        // Spacer antar proses
         if (procIndex > 0) { wsData.push([""]); currentRow++; }
 
         ['tetap', 'kontrak', 'yayasan'].forEach((type, idx) => {
@@ -717,18 +699,13 @@
 
           dates.forEach(dateISO => {
             let val = 0;
-
-            // A. AMBIL NILAI PROSES UTAMA (SUM SEMUA CENTER)
             const mainData = dataMap[key] && dataMap[key][dateISO];
             if (mainData) {
               Object.values(mainData).forEach(v => {
                 val += Number(v[type] || 0);
               });
             }
-
-            // B. AMBIL NILAI DARI MERGE SOURCE (Jika Ada)
             const rule = mergers.find(m => norm(m.dest) === key && norm(m.src) !== key);
-            
             if (rule) {
                const srcKey = norm(rule.src);
                const srcData = dataMap[srcKey] && dataMap[srcKey][dateISO];
@@ -738,7 +715,6 @@
                   });
                }
             }
-
             row.push(val === 0 ? 0 : val);
           });
 
@@ -747,12 +723,10 @@
         });
       });
 
-      // 8. FINALISASI FILE EXCEL
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       ws['!merges'] = merges;
 
-      // Styling
       const range = XLSX.utils.decode_range(ws['!ref']);
       const styleHeader = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { bold: true, sz: 11 }, alignment: { horizontal: "center", vertical: "center" }, border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} } };
       const styleProcess = { font: { bold: true }, alignment: { vertical: "center", horizontal: "left" }, border: { top:{style:"thin"}, bottom:{style:"thin"}, left:{style:"thin"}, right:{style:"thin"} } };
