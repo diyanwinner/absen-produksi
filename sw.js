@@ -1,5 +1,5 @@
 /* Service Worker: STALE-WHILE-REVALIDATE (Instan Load) */
-const VERSION   = '2026-01-14-PERF-V1'; // Ganti versi biar cache lama dibuang
+const VERSION   = '2026-03-06-FIX-V2'; // Ganti versi biar cache lama dibuang
 const CACHE_KEY = `absen-prod-cache::${VERSION}`;
 
 const CORE_ASSETS = [
@@ -29,25 +29,34 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// STRATEGI BARU: Cek Cache dulu -> Tampilkan -> Update Background
+// STRATEGI: Hanya cache file statis milik app (HTML, JS, icon)
+// API calls ke Supabase TIDAK dicache biar data selalu fresh!
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // ⚠️ SKIP: Jangan intercept request ke luar domain (Supabase, CDN, dsb)
+  // Kalau dicache, data bisa stale / salah saat pertama buka!
+  if (url.origin !== self.location.origin) return;
+
+  // Hanya cache aset statis (bukan dynamic data)
+  const isStaticAsset = /\.(html|js|css|png|jpg|svg|ico|webmanifest)$/.test(url.pathname) || url.pathname === '/';
+  if (!isStaticAsset) return;
 
   e.respondWith((async () => {
     const cache = await caches.open(CACHE_KEY);
     const cachedResp = await cache.match(req);
 
-    // Fetch network untuk update cache di masa depan
+    // Update cache di background (stale-while-revalidate untuk file statis)
     const networkFetch = fetch(req).then(fresh => {
-      cache.put(req, fresh.clone());
+      if (fresh.ok) cache.put(req, fresh.clone());
       return fresh;
-    }).catch(() => {
-      // Kalau offline, ya sudah diam saja
-    });
+    }).catch(() => null);
 
-    // Kalau ada di cache, kasih langsung (NGEBUT!)
-    // Kalau ga ada, baru tunggu network
-    return cachedResp || networkFetch;
+    // Kalau ada cache → tampilkan langsung, update di background
+    // Kalau belum ada cache → tunggu network
+    return cachedResp || await networkFetch;
   })());
 });
