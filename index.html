@@ -226,6 +226,12 @@
     }
     #btnReload { background: var(--gold); border: none; color: #1a1a1a; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 700; }
 
+    @keyframes skl {
+      0%   { opacity: 0.5; }
+      50%  { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+
     @media (max-width: 600px) {
       .wrap { padding: 12px; }
       .menu-grid { grid-template-columns: 1fr; }
@@ -503,20 +509,43 @@
   }
 
   async function refresh(){
-    $key.textContent = "Loading...";
-    PROC = await fetchProcesses(CENTER);
-    ROWS = PROC.map(p=>({process_id:p.id,name:p.name,tetap:null,kontrak:null,yayasan:null,total:0}));
-    
-    if(PROC.length > 0) {
-      const serverRows = await fetchAttendance($tgl.value, $shift.value, CENTER);
-      const byPid = Object.fromEntries(serverRows.map(r=>[r.process_id, r]));
-      ROWS = ROWS.map(r => byPid[r.process_id] ? byPid[r.process_id] : r);
-      renderGrid();
-      $key.textContent = `${$tgl.value} • Shift ${$shift.value} • ${CENTER}`;
-    } else {
-       $gridBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Gagal memuat data / Data kosong</td></tr>';
-    }
+    $key.textContent = "Memuat data...";
     document.getElementById('rekapWrap').style.display='none';
+
+    // Skeleton loading sementara nunggu data
+    $gridBody.innerHTML = Array(8).fill(`
+      <tr>
+        <td><div style="height:13px;background:#2d2d2d;border-radius:4px;width:20px;margin:auto;animation:skl 1.2s infinite;"></div></td>
+        <td><div style="height:13px;background:#2d2d2d;border-radius:4px;width:75%;animation:skl 1.2s infinite;"></div></td>
+        <td><div style="height:13px;background:#2d2d2d;border-radius:4px;width:40px;margin:auto;animation:skl 1.2s infinite;"></div></td>
+        <td><div style="height:13px;background:#2d2d2d;border-radius:4px;width:40px;margin:auto;animation:skl 1.2s infinite;"></div></td>
+        <td><div style="height:13px;background:#2d2d2d;border-radius:4px;width:40px;margin:auto;animation:skl 1.2s infinite;"></div></td>
+        <td><div style="height:13px;background:#2d2d2d;border-radius:4px;width:30px;margin:auto;animation:skl 1.2s infinite;"></div></td>
+      </tr>`).join('');
+
+    try {
+      // ✅ FIX: Jalankan kedua fetch BERSAMAAN bukan berurutan → 2x lebih cepat
+      const [procData, serverRows] = await Promise.all([
+        fetchProcesses(CENTER),
+        fetchAttendance($tgl.value, $shift.value, CENTER)
+      ]);
+      PROC = procData;
+      ROWS = PROC.map(p=>({process_id:p.id,name:p.name,tetap:null,kontrak:null,yayasan:null,total:0}));
+
+      if(PROC.length > 0) {
+        const byPid = Object.fromEntries(serverRows.map(r=>[r.process_id, r]));
+        ROWS = ROWS.map(r => byPid[r.process_id] ? byPid[r.process_id] : r);
+        renderGrid();
+        $key.textContent = `${$tgl.value} • Shift ${$shift.value} • ${CENTER}`;
+      } else {
+        $gridBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">Tidak ada data proses.</td></tr>';
+        $key.textContent = 'Gagal memuat';
+      }
+    } catch(err) {
+      console.error('refresh error:', err);
+      $gridBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--danger);">⚠️ Koneksi gagal — cek internet lalu refresh.</td></tr>';
+      $key.textContent = 'Error';
+    }
   }
 
   function renderGrid() {
