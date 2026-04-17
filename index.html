@@ -127,16 +127,6 @@
       border-color: var(--gold); background: #333; box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1); 
     }
     
-    .tabs { 
-      background: var(--bg-input); padding: 4px; border-radius: 10px; 
-      border: 1px solid var(--border-subtle); display: flex; 
-    }
-    .tab {
-      flex: 1; border: none; background: transparent; color: var(--text-muted);
-      padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
-    }
-    .tab.active { background: var(--gold); color: #1a1a1a; box-shadow: 0 2px 4px rgba(0,0,0,0.4); font-weight: 800; }
-
     .info-bar { 
       margin-top: 16px; display: flex; justify-content: space-between; align-items: center; 
       border-top: 1px solid var(--border-subtle); padding-top: 16px; flex-wrap: wrap; gap: 10px; 
@@ -209,6 +199,27 @@
       background: transparent; opacity: 0.7; color: var(--text-muted);
     }
     .pill.filled { opacity: 1; border-color: var(--success); color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); }
+    .pill.empty { opacity: 1; border-color: var(--danger); color: var(--danger); font-weight: bold; background: rgba(239, 68, 68, 0.1); }
+
+    /* Status Overview Panel */
+    #statusOverviewWrap { margin-top: 20px; border: 1px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.05); }
+    .status-header {
+      background: rgba(212, 175, 55, 0.1); color: var(--gold); padding: 12px 16px;
+      font-weight: 700; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--gold);
+    }
+    .status-row-incomplete { background: rgba(239, 68, 68, 0.04); }
+    .status-row-today { background: rgba(212, 175, 55, 0.06); }
+    .btn-fill-shift {
+      border: 1px solid var(--danger); background: transparent; color: var(--danger);
+      padding: 3px 12px; border-radius: 12px; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: 0.2s;
+    }
+    .btn-fill-shift:hover { background: var(--danger); color: #fff; }
+    .current-day-status {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .current-day-status-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* Back Button di Header */
     .btn-back {
@@ -298,13 +309,6 @@
           <option value="3">Shift 3 (Malam)</option>
         </select>
       </div>
-      <div class="form-group" style="display:none;">
-        <label>Work Center</label>
-        <div class="tabs">
-          <button class="tab active" data-center="Injection">Injection</button>
-          <button class="tab" data-center="Assembly">Assembly</button>
-        </div>
-      </div>
     </div>
     
     <div class="info-bar">
@@ -313,6 +317,15 @@
         <span><b>Ctrl+S</b> Simpan</span>
         <span><b>Ctrl+E</b> Export JSON</span>
       </div>
+    </div>
+
+    <div class="info-bar" style="border-top:1px dashed var(--border-subtle); padding-top:12px; margin-top:12px;">
+      <div class="current-day-status">
+        <span class="current-day-status-label">Status Tanggal Ini:</span>
+        <div id="currentDayStatus" style="display:flex; gap:6px;"></div>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn" id="btnStatusOverview" style="padding:6px 14px; font-size:12px;">📊 Cek 14 Hari Terakhir</button>
     </div>
   </div>
 
@@ -398,6 +411,30 @@
       <button class="btn" onclick="document.getElementById('rekapWrap').style.display='none'">Tutup</button>
     </div>
   </div>
+
+  <div class="grid-card" id="statusOverviewWrap" style="display:none;">
+    <div class="status-header">
+      <span>📊 STATUS PENGISIAN — 14 HARI TERAKHIR</span>
+      <button class="btn" style="padding:4px 14px; font-size:11px;" onclick="document.getElementById('statusOverviewWrap').style.display='none'">Tutup</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:35%;">Tanggal</th>
+            <th style="text-align:center;">S1 (Pagi)</th>
+            <th style="text-align:center;">S2 (Siang)</th>
+            <th style="text-align:center;">S3 (Malam)</th>
+            <th style="text-align:center;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="statusOverviewBody"></tbody>
+      </table>
+    </div>
+    <div class="actions" style="font-size:12px; color:var(--text-muted);">
+      <span>💡 Klik tombol <b style="color:var(--danger);">"Isi"</b> untuk langsung loncat ke tanggal + shift yang belum terisi</span>
+    </div>
+  </div>
 </div>
 
 <div id="updateToast">
@@ -450,6 +487,15 @@
         void landingPage.offsetWidth;
         landingPage.style.opacity = 1;
       }, 300);
+    },
+    jumpTo: (date, shift) => {
+      $tgl.value = date;
+      $shift.value = String(shift);
+      document.getElementById('statusOverviewWrap').style.display='none';
+      refresh();
+      setTimeout(()=>{
+        document.querySelector('#grid').scrollIntoView({behavior:'smooth', block:'start'});
+      }, 400);
     }
   };
 
@@ -471,7 +517,12 @@
   document.getElementById('btnExportJSON').onclick  = ()=>downloadJSON(currentPayload(),'shift.json');
   document.getElementById('btnExportXLSX').onclick  = exportToExcelStyled;
   document.getElementById('btnRekap').onclick       = renderRekap;
+  document.getElementById('btnStatusOverview').onclick = showStatusOverview;
   document.getElementById('btnRekapCSV').onclick    = ()=>{
+    if(!_lastRekap){
+      alert('Klik "Lihat Rekap" dulu ya bro, belum ada data rekap yang bisa di-download.');
+      return;
+    }
     const csv = rekapToCSV(_lastRekap.rows, _lastRekap.totals);
     downloadCSV(csv,'rekap.csv');
   };
@@ -482,21 +533,18 @@
   });
 
   async function fetchProcesses(center){
-    try {
-      const { data, error } = await supa.from('processes').select('id,name,sort').eq('center', center).order('sort', { ascending:true });
-      if(error) throw error; return data;
-    } catch(e) { console.error(e); return []; }
+    const { data, error } = await supa.from('processes').select('id,name,sort').eq('center', center).order('sort', { ascending:true });
+    if(error){ console.error('fetchProcesses error:', error); throw error; }
+    return data || [];
   }
 
   async function fetchAttendance(dateISO, shift, center){
-    try {
-      const { data, error } = await supa.from('attendance').select('process_id,tetap,kontrak,yayasan,processes(name,sort)').eq('work_date', dateISO).eq('shift', shift).eq('center', center).order('processes(sort)');
-      if(error) throw error;
-      return data.map(r=>({
-        process_id: r.process_id, name: r.processes.name, tetap: r.tetap, kontrak: r.kontrak, yayasan: r.yayasan,
-        total: (r.tetap||0)+(r.kontrak||0)+(r.yayasan||0)
-      }));
-    } catch(e) { return []; }
+    const { data, error } = await supa.from('attendance').select('process_id,tetap,kontrak,yayasan,processes(name,sort)').eq('work_date', dateISO).eq('shift', shift).eq('center', center).order('processes(sort)');
+    if(error){ console.error('fetchAttendance error:', error); throw error; }
+    return (data || []).map(r=>({
+      process_id: r.process_id, name: r.processes.name, tetap: r.tetap, kontrak: r.kontrak, yayasan: r.yayasan,
+      total: (r.tetap||0)+(r.kontrak||0)+(r.yayasan||0)
+    }));
   }
 
   async function upsertAttendance(dateISO, shift, center, rows){
@@ -537,6 +585,7 @@
         ROWS = ROWS.map(r => byPid[r.process_id] ? byPid[r.process_id] : r);
         renderGrid();
         $key.textContent = `${$tgl.value} • Shift ${$shift.value} • ${CENTER}`;
+        updateCurrentDayStatus();
       } else {
         $gridBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">Tidak ada data proses.</td></tr>';
         $key.textContent = 'Gagal memuat';
@@ -551,7 +600,7 @@
   function renderGrid() {
     $gridBody.innerHTML = '';
     ROWS.forEach((r, idx) => {
-      const val = k => (r[k] ? r[k] : '');
+      const val = k => (r[k] != null ? r[k] : '');
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="text-align:center; color:var(--text-muted);">${idx + 1}</td>
@@ -584,6 +633,7 @@
     try{
       await upsertAttendance($tgl.value, $shift.value, CENTER, ROWS);
       toast('Alhamdulillah Data Tersimpan! ✅');
+      updateCurrentDayStatus(); // refresh pill status biar langsung berubah ijo
     }catch(e){
       console.error(e);
       alert('Gagal menyimpan ke server');
@@ -606,7 +656,7 @@
 
   async function checkShiftsFilled(dateISO, center){
     const { data, error } = await supa.from('attendance').select('shift').eq('work_date', dateISO).eq('center', center);
-    if(error) return null;
+    if(error){ console.error('checkShiftsFilled error:', error); return null; }
     const found = new Set(data.map(r => Number(r.shift)));
     return { 1: found.has(1), 2: found.has(2), 3: found.has(3) };
   }
@@ -628,15 +678,16 @@
     tbody.innerHTML = '';
     let totTet=0, totKon=0, totYay=0, totAll=0;
     rows.forEach((r,i)=>{
-      totTet+=r.tetap; totKon+=r.kontrak; totYay+=r.yayasan; totAll+=r.total;
+      const rt = Number(r.tetap||0), rk = Number(r.kontrak||0), ry = Number(r.yayasan||0), ra = Number(r.total||0);
+      totTet+=rt; totKon+=rk; totYay+=ry; totAll+=ra;
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="text-align:center;">${i+1}</td>
         <td>${escapeHTML(r.name)}</td>
-        <td style="text-align:center;">${r.tetap}</td>
-        <td style="text-align:center;">${r.kontrak}</td>
-        <td style="text-align:center;">${r.yayasan}</td>
-        <td style="text-align:center; font-weight:700;">${r.total}</td>`;
+        <td style="text-align:center;">${rt}</td>
+        <td style="text-align:center;">${rk}</td>
+        <td style="text-align:center;">${ry}</td>
+        <td style="text-align:center; font-weight:700;">${ra}</td>`;
       tbody.appendChild(tr);
     });
     
@@ -686,6 +737,138 @@
     Object.assign(div.style,{ position:'fixed',bottom:'30px',left:'50%',transform:'translateX(-50%)', background:'#10b981', padding:'10px 20px', borderRadius:'30px', color:'#022c22', fontWeight:'600', zIndex:9999, boxShadow:'0 5px 15px rgba(0,0,0,0.3)' });
     div.textContent = msg; document.body.appendChild(div);
     setTimeout(()=>div.remove(),2000);
+  }
+
+  // === FITUR STATUS PENGISIAN ===
+
+  // Helper: convert Date -> local ISO (YYYY-MM-DD)
+  function toLocalISO(d) {
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 10);
+  }
+
+  // Update pill status untuk tanggal yang sedang dipilih (di info-bar)
+  async function updateCurrentDayStatus() {
+    const box = document.getElementById('currentDayStatus');
+    if (!box) return;
+    box.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">Cek...</span>';
+    try {
+      const status = await checkShiftsFilled($tgl.value, CENTER);
+      box.innerHTML = '';
+      const labels = { 1: 'Pagi', 2: 'Siang', 3: 'Malam' };
+      [1, 2, 3].forEach(s => {
+        const filled = status && status[s];
+        const cls = filled ? 'filled' : 'empty';
+        const mark = filled ? '✓' : '✗';
+        box.innerHTML += `<span class="pill ${cls}" title="Shift ${s} ${labels[s]}">S${s} ${labels[s]} ${mark}</span>`;
+      });
+    } catch (e) {
+      console.error('updateCurrentDayStatus error:', e);
+      box.innerHTML = '<span style="font-size:11px; color:var(--danger);">Gagal cek status</span>';
+    }
+  }
+
+  // Render panel overview 14 hari terakhir
+  async function showStatusOverview() {
+    const wrap = document.getElementById('statusOverviewWrap');
+    const body = document.getElementById('statusOverviewBody');
+    const btn = document.getElementById('btnStatusOverview');
+    const oldBtn = btn.innerHTML;
+    btn.innerHTML = 'Loading...';
+
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:24px; color:var(--text-muted);">Memuat data 14 hari...</td></tr>';
+    wrap.style.display = 'block';
+
+    try {
+      const today = new Date();
+      const past = new Date();
+      past.setDate(past.getDate() - 13);
+
+      const { data, error } = await supa
+        .from('attendance')
+        .select('work_date, shift')
+        .eq('center', CENTER)
+        .gte('work_date', toLocalISO(past))
+        .lte('work_date', toLocalISO(today));
+
+      if (error) throw error;
+
+      // Group shifts by date
+      const byDate = {};
+      data.forEach(r => {
+        if (!byDate[r.work_date]) byDate[r.work_date] = new Set();
+        byDate[r.work_date].add(Number(r.shift));
+      });
+
+      // Build 14 hari (paling baru di atas)
+      const rows = [];
+      const todayISO = toLocalISO(today);
+      for (let i = 0; i < 14; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const iso = toLocalISO(d);
+        const shifts = byDate[iso] || new Set();
+        rows.push({
+          date: iso,
+          isToday: iso === todayISO,
+          dayName: d.toLocaleDateString('id-ID', { weekday: 'short' }),
+          s1: shifts.has(1),
+          s2: shifts.has(2),
+          s3: shifts.has(3),
+        });
+      }
+
+      body.innerHTML = '';
+      const labels = { 1: 'Pagi', 2: 'Siang', 3: 'Malam' };
+
+      rows.forEach(r => {
+        const filledCount = [r.s1, r.s2, r.s3].filter(Boolean).length;
+        const allFilled = filledCount === 3;
+        const noneFilled = filledCount === 0;
+
+        const cell = (filled, shiftNum) => {
+          if (filled) {
+            return `<td style="text-align:center; color:var(--success); font-size:1.2em; font-weight:700;">✓</td>`;
+          }
+          return `<td style="text-align:center;"><button class="btn-fill-shift" onclick="app.jumpTo('${r.date}', ${shiftNum})">Isi</button></td>`;
+        };
+
+        let statusBadge;
+        if (allFilled) {
+          statusBadge = `<span class="pill filled">Lengkap</span>`;
+        } else if (noneFilled) {
+          statusBadge = `<span class="pill empty">Belum Ada</span>`;
+        } else {
+          statusBadge = `<span class="pill empty">Kurang ${3 - filledCount}</span>`;
+        }
+
+        let rowClass = '';
+        if (!allFilled) rowClass = 'status-row-incomplete';
+        if (r.isToday) rowClass += ' status-row-today';
+
+        const tr = document.createElement('tr');
+        tr.className = rowClass.trim();
+        tr.innerHTML = `
+          <td>
+            <b style="color:var(--text-main);">${r.date}</b>
+            <span style="color:var(--text-muted); font-size:11px; margin-left:6px;">(${r.dayName})</span>
+            ${r.isToday ? '<span style="background:var(--gold); color:#1a1a1a; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:700; margin-left:6px;">HARI INI</span>' : ''}
+          </td>
+          ${cell(r.s1, 1)}
+          ${cell(r.s2, 2)}
+          ${cell(r.s3, 3)}
+          <td style="text-align:center;">${statusBadge}</td>
+        `;
+        body.appendChild(tr);
+      });
+
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      console.error('showStatusOverview error:', e);
+      body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:24px; color:var(--danger);">⚠️ Gagal memuat: ${e.message}</td></tr>`;
+    } finally {
+      btn.innerHTML = oldBtn;
+    }
   }
 
   async function exportToExcelStyled() {
